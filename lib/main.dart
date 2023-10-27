@@ -16,9 +16,13 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: BillScreen(), // Changed to BillingScreen which you should have in billing.dart
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        // Add other dark theme properties if needed
+      ),
+      themeMode: ThemeMode.dark, // Set theme mode to dark
+      home:  BillScreen(), // Ensure you have a constructor marked as const in BillScreen
+      debugShowCheckedModeBanner: false,
     );
   }
 }
-
-// Here, you can add your BillingScreen in billing.dart.

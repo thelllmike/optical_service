@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(MyApp());
+
+final ValueNotifier<ThemeData> _themeNotifier = ValueNotifier(ThemeData.dark());
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
-      home: BillScreen(),
+    return ValueListenableBuilder<ThemeData>(
+      valueListenable: _themeNotifier,
+      builder: (context, theme, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: theme,
+          home: BillScreen(),
+        );
+      },
     );
   }
 }
+
 
 class BillScreen extends StatefulWidget {
   @override
@@ -36,20 +42,21 @@ class _BillScreenState extends State<BillScreen> {
       });
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Vision Express Optical Service'),
+        title: Text('Optical Service'),
         actions: [
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          )
+     IconButton(
+  icon: Icon(Icons.settings),
+  onPressed: () {
+    _themeNotifier.value = (_themeNotifier.value.brightness == Brightness.dark)
+        ? ThemeData.light()
+        : ThemeData.dark();
+  },
+)
+
         ],
       ),
       body: SingleChildScrollView(
