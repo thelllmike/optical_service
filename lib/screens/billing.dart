@@ -59,24 +59,30 @@ class _BillScreenState extends State<BillScreen> {
 
         ],
       ),
-      body: SingleChildScrollView(
+     body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: _buildCustomerDetailsSection()),
-                  Expanded(child: _buildFrameDetailsSection()),
-                  Expanded(child: _buildInvoiceAndDeliveryDetailsSection()),
+                  Expanded(child: _buildCustomerDetailsSection(), flex: 1),
+                  SizedBox(width: 8),
+                  Expanded(child: _buildFrameDetailsSection(), flex: 1),
+                  SizedBox(width: 8),
+                  Expanded(child: _buildInvoiceAndDeliveryDetailsSection(), flex: 1),
                 ],
               ),
+              SizedBox(height: 16),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: _buildLensDetailsSection()),
-                  Expanded(child: _buildPrescriptionDetailsSection()),
-                  Expanded(child: _buildPaymentDetailsSection()),
+                  Expanded(child: _buildLensDetailsSection(), flex: 1),
+                  SizedBox(width: 8),
+                  Expanded(child: _buildPrescriptionDetailsSection(), flex: 1),
+                  SizedBox(width: 8),
+                  Expanded(child: _buildPaymentDetailsSection(), flex: 1),
                 ],
               ),
               SizedBox(height: 16),
