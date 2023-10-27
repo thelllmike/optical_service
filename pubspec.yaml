@@ -62,6 +62,35 @@ flutter:
   # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/page-1/images/print.png
+    - assets/page-1/images/tear-off-calendar.png
+    - assets/page-1/images/moon-symbol.png
+    - assets/page-1/images/image-1-bg.png
+    - assets/page-1/images/sun.png
+    - assets/page-1/images/vector-4.png
+    - assets/page-1/images/vector-7.png
+    - assets/page-1/images/sun-2PA.png
+    - assets/page-1/images/tear-off-calendar-wDr.png
+    - assets/page-1/images/vector-6.png
+    - assets/page-1/images/vector-5.png
+    - assets/page-1/images/vector-4-ws6.png
+    - assets/page-1/images/vector-7-baG.png
+    - assets/page-1/images/image-2.png
+    - assets/page-1/images/vector-2.png
+    - assets/page-1/images/vector-5-G1N.png
+    - assets/page-1/images/vector-6-aCG.png
+    - assets/page-1/images/vector-1.png
+    - assets/page-1/images/vector-8.png
+    - assets/page-1/images/tear-off-calendar-oFe.png
+    - assets/page-1/images/tear-off-calendar-t64.png
+    - assets/page-1/images/image-3.png
+    - assets/page-1/images/print-fMS.png
+    - assets/page-1/images/vector-2-PaG.png
+    - assets/page-1/images/vector-1-JSL.png
+    - assets/page-1/images/vector-3.png
+    - assets/page-1/images/vector-3-Etg.png
+    - assets/page-1/images/vector-8-HKn.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
