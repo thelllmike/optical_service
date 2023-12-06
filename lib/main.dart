@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/billing.dart'; // Assuming you have a billing.dart file inside a screens folder
+import 'screens/billing.dart';
+import 'screens/home.dart';  // Assuming you have a billing.dart file inside a screens folder
 
 void main() {
   runApp(const MyApp());

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:optical_desktop/screens/sidebar/sidebar.dart';
 
 
 final ValueNotifier<ThemeData> _themeNotifier = ValueNotifier(ThemeData.dark());
+
 
 class MyApp extends StatelessWidget {
   @override
@@ -26,7 +28,7 @@ class BillScreen extends StatefulWidget {
 }
 
 class _BillScreenState extends State<BillScreen> {
-  bool _isDarkMode = false;
+  bool _isSidebarVisible = false;
   DateTime _selectedDate = DateTime.now();
 
   Future<void> _selectDate(BuildContext context) async {
@@ -42,54 +44,27 @@ class _BillScreenState extends State<BillScreen> {
       });
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Optical Service'),
         actions: [
-     IconButton(
-  icon: Icon(Icons.settings),
-  onPressed: () {
-    _themeNotifier.value = (_themeNotifier.value.brightness == Brightness.dark)
-        ? ThemeData.light()
-        : ThemeData.dark();
-  },
-)
-
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              _themeNotifier.value = (_themeNotifier.value.brightness == Brightness.dark)
+                  ? ThemeData.light()
+                  : ThemeData.dark();
+            },
+          )
         ],
       ),
-     body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildCustomerDetailsSection(), flex: 1),
-                  SizedBox(width: 8),
-                  Expanded(child: _buildFrameDetailsSection(), flex: 1),
-                  SizedBox(width: 8),
-                  Expanded(child: _buildInvoiceAndDeliveryDetailsSection(), flex: 1),
-                ],
-              ),
-              SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildLensDetailsSection(), flex: 1),
-                  SizedBox(width: 8),
-                  Expanded(child: _buildPrescriptionDetailsSection(), flex: 1),
-                  SizedBox(width: 8),
-                  Expanded(child: _buildPaymentDetailsSection(), flex: 1),
-                ],
-              ),
-              SizedBox(height: 16),
-              _buildSaveAndPrintButton(),
-            ],
-          ),
-        ),
+  body: Row(
+        children: [
+            Sidebar(),
+          Expanded(child: _buildMainContent()),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -97,6 +72,43 @@ class _BillScreenState extends State<BillScreen> {
         },
         child: Icon(Icons.print),
         tooltip: 'Save & Print (F12)',
+      ),
+    );
+  }
+
+
+
+  Widget _buildMainContent() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _buildCustomerDetailsSection(), flex: 1),
+                SizedBox(width: 8),
+                Expanded(child: _buildFrameDetailsSection(), flex: 1),
+                SizedBox(width: 8),
+                Expanded(child: _buildInvoiceAndDeliveryDetailsSection(), flex: 1),
+              ],
+            ),
+            SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _buildLensDetailsSection(), flex: 1),
+                SizedBox(width: 8),
+                Expanded(child: _buildPrescriptionDetailsSection(), flex: 1),
+                SizedBox(width: 8),
+                Expanded(child: _buildPaymentDetailsSection(), flex: 1),
+              ],
+            ),
+            SizedBox(height: 16),
+            _buildSaveAndPrintButton(),
+          ],
+        ),
       ),
     );
   }
@@ -195,24 +207,23 @@ class _BillScreenState extends State<BillScreen> {
     );
   }
 
-Widget _buildTextField(String label, {int maxLines = 1}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 2),
-    child: TextField(
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4.0),
-          borderSide: BorderSide(),
+  Widget _buildTextField(String label, {int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: TextField(
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4.0),
+            borderSide: BorderSide(),
+          ),
+          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 5.0),
         ),
-        contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 5.0),
+        maxLines: maxLines,
+        style: TextStyle(fontSize: 14),
       ),
-      maxLines: maxLines,
-      style: TextStyle(fontSize: 14),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildDropdownField(String label, List<String> items) {
     return Padding(
