@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:optical_desktop/screens/home.dart';
-import '../home.dart'; // Import Homescreen
+import '../billing.dart';  // Import Homescreen
 
 class Sidebar extends StatelessWidget {
   @override
@@ -8,13 +8,22 @@ class Sidebar extends StatelessWidget {
     return NavigationRail(
       selectedIndex: 0,
       onDestinationSelected: (int index) {
-        if (index == 0) { // Assuming 0 is the index for 'Home'
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => Homescreen()),
-          );
+        switch (index) {
+          case 0: // Index for 'Home'
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Homescreen()),
+            );
+            break;
+          // ... include other cases for different indices here
+          case 7: // Assuming 7 is the index for 'Billing'
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => BillScreen()), // Navigate to BillScreen
+            );
+            break;
+          // Add other cases for different destinations
         }
-        // Add other cases for different indices if needed
       },
      labelType: NavigationRailLabelType.all,
       destinations: [
@@ -23,20 +32,16 @@ class Sidebar extends StatelessWidget {
           selectedIcon: Icon(Icons.home_filled),
           label: Text('Home'),
         ),
-        NavigationRailDestination(
-          icon: Icon(Icons.bar_chart),
-          selectedIcon: Icon(Icons.bar_chart),
-          label: Text('Charts'),
-        ),
+       
         NavigationRailDestination(
           icon: Icon(Icons.payments),
           selectedIcon: Icon(Icons.payments),
           label: Text('Payroll'),
         ),
-        NavigationRailDestination(
-          icon: Icon(Icons.add_photo_alternate),
-          selectedIcon: Icon(Icons.add_photo_alternate_outlined),
-          label: Text('Add Frames'),
+         NavigationRailDestination(
+          icon: Icon(Icons.inventory),
+          selectedIcon: Icon(Icons.inventory_2),
+          label: Text('Add Frames & Lenses'),
         ),
         NavigationRailDestination(
           icon: Icon(Icons.remove_red_eye),
@@ -58,10 +63,16 @@ class Sidebar extends StatelessWidget {
           selectedIcon: Icon(Icons.money_off_csred),
           label: Text('Expenses'),
         ),
+       
+           NavigationRailDestination(
+          icon: Icon(Icons.receipt),
+          selectedIcon: Icon(Icons.receipt_long),
+          label: Text('Billing'),
+        ),
         NavigationRailDestination(
-          icon: Icon(Icons.settings),
-          selectedIcon: Icon(Icons.settings),
-          label: Text('Settings'),
+          icon: Icon(Icons.exit_to_app),
+          selectedIcon: Icon(Icons.exit_to_app),
+          label: Text('Logout'),
         ),
       ],
     );

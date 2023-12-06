@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart';
 
-void main() => runApp(MyApp());
+
 
 final ValueNotifier<ThemeData> _themeNotifier = ValueNotifier(ThemeData.dark());
 
