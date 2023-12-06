@@ -186,8 +186,8 @@ class _BillScreenState extends State<BillScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            SizedBox(height: 8),
+            Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            SizedBox(height: 4),
             ...children,
           ],
         ),
@@ -195,22 +195,28 @@ class _BillScreenState extends State<BillScreen> {
     );
   }
 
-  Widget _buildTextField(String label, {int maxLines = 1}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: TextField(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(),
+Widget _buildTextField(String label, {int maxLines = 1}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 2),
+    child: TextField(
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(4.0),
+          borderSide: BorderSide(),
         ),
-        maxLines: maxLines,
+        contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 5.0),
       ),
-    );
-  }
+      maxLines: maxLines,
+      style: TextStyle(fontSize: 14),
+    ),
+  );
+}
+
 
   Widget _buildDropdownField(String label, List<String> items) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: DropdownButtonFormField(
         decoration: InputDecoration(
           labelText: label,
