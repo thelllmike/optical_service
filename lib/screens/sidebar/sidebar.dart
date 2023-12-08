@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:optical_desktop/screens/home.dart';
+import 'package:optical_desktop/screens/addproduct.dart';
 import '../billing.dart';  // Import Homescreen
 
 class Sidebar extends StatelessWidget {
@@ -16,6 +17,12 @@ class Sidebar extends StatelessWidget {
             );
             break;
           // ... include other cases for different indices here
+          case 2: // Index for 'Add Frames & Lenses'
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AddProductScreen()), // Navigate to AddProductScreen
+            );
+            break;
           case 7: // Assuming 7 is the index for 'Billing'
             Navigator.push(
               context,
@@ -23,6 +30,7 @@ class Sidebar extends StatelessWidget {
             );
             break;
           // Add other cases for different destinations
+          // ... other cases ...
         }
       },
      labelType: NavigationRailLabelType.all,
