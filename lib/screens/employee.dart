@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:optical_desktop/screens/sidebar/sidebar.dart';
 
 // Assuming the EmployeeScreen is a page to add new employees and list them
 class EmployeeScreen extends StatefulWidget {
@@ -24,9 +25,9 @@ class _EmployeeScreenState extends State<EmployeeScreen> {
       appBar: AppBar(
         title: Text('Employee Management'),
       ),
-      body: Row(
+     body: Row(
         children: <Widget>[
-          // Sidebar() goes here if you want to include it
+          Sidebar(), // Sidebar widget
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
