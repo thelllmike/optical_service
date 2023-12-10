@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:optical_desktop/screens/home.dart';
 import 'package:optical_desktop/screens/addproduct.dart';
+import 'package:optical_desktop/screens/invoice.dart';
 import '../billing.dart';  // Import Homescreen
 
 class Sidebar extends StatelessWidget {
@@ -23,6 +24,14 @@ class Sidebar extends StatelessWidget {
               MaterialPageRoute(builder: (context) => AddProductScreen()), // Navigate to AddProductScreen
             );
             break;
+
+          case 4: // Assuming 4 is the index for 'Invoice'
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => InvoiceScreen()),
+            );
+            break;
+
           case 7: // Assuming 7 is the index for 'Billing'
             Navigator.push(
               context,
