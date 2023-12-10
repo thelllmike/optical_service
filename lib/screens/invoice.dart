@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Add this line to format dates
+import 'package:intl/intl.dart';
+import 'package:optical_desktop/screens/sidebar/sidebar.dart'; // Ensure this path is correct
 
 
 class MyApp extends StatelessWidget {
@@ -22,37 +23,35 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   DateTime selectedStartDate = DateTime.now();
   DateTime selectedEndDate = DateTime.now();
 
-  // Function to present DatePicker and pick a date
-Future<void> _selectDate(BuildContext context, bool isStart) async {
-  DateTime initialDate = isStart ? selectedStartDate : selectedEndDate;
-  DateTime firstDate = DateTime(2000);
-  DateTime lastDate = DateTime(2101);
+  Future<void> _selectDate(BuildContext context, bool isStart) async {
+    DateTime initialDate = isStart ? selectedStartDate : selectedEndDate;
+    DateTime firstDate = DateTime(2000);
+    DateTime lastDate = DateTime(2101);
 
-  // Ensure that the initialDate is within the range between firstDate and lastDate
-  if (initialDate.isBefore(firstDate)) {
-    initialDate = firstDate;
-  }
-  if (initialDate.isAfter(lastDate)) {
-    initialDate = lastDate;
-  }
+    if (initialDate.isBefore(firstDate)) {
+      initialDate = firstDate;
+    }
+    if (initialDate.isAfter(lastDate)) {
+      initialDate = lastDate;
+    }
 
-  final DateTime? picked = await showDatePicker(
-    context: context,
-    initialDate: initialDate,
-    firstDate: firstDate,
-    lastDate: lastDate,
-  );
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+    );
 
-  if (picked != null && picked != initialDate) {
-    setState(() {
-      if (isStart) {
-        selectedStartDate = picked;
-      } else {
-        selectedEndDate = picked;
-      }
-    });
+    if (picked != null && picked != initialDate) {
+      setState(() {
+        if (isStart) {
+          selectedStartDate = picked;
+        } else {
+          selectedEndDate = picked;
+        }
+      });
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -60,58 +59,64 @@ Future<void> _selectDate(BuildContext context, bool isStart) async {
       appBar: AppBar(
         title: Text('Optical Sales Invoice Screen'),
       ),
-      body: Column(
+      body: Row(
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectDate(context, true),
-                    child: Text('Start Date: ${DateFormat('yyyy-MM-dd').format(selectedStartDate)}'),
-                  ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _selectDate(context, false),
-                    child: Text('End Date: ${DateFormat('yyyy-MM-dd').format(selectedEndDate)}'),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    // Implement search logic
-                  },
-                  child: Text('Search'),
-                ),
-              ],
-            ),
-          ),
+          Sidebar(), // Sidebar widget
+          VerticalDivider(thickness: 1, width: 1),
           Expanded(
-            child: SingleChildScrollView(
-              child: DataTable(
-                columns: const <DataColumn>[
-                  DataColumn(label: Text('Date')),
-                  DataColumn(label: Text('Mobile Number')),
-                  DataColumn(label: Text('Customer Name')),
-                  DataColumn(label: Text('Advance')),
-                  DataColumn(label: Text('Lens Cost')),
-                  DataColumn(label: Text('Frame Cost')),
-                  DataColumn(label: Text('Total')),
-                  DataColumn(label: Text('Action')),
-                ],
-                rows: const <DataRow>[
-                  // Populate data rows with actual data
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _selectDate(context, true),
+                          child: Text('Start Date: ${DateFormat('yyyy-MM-dd').format(selectedStartDate)}'),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _selectDate(context, false),
+                          child: Text('End Date: ${DateFormat('yyyy-MM-dd').format(selectedEndDate)}'),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Implement search logic
+                        },
+                        child: Text('Search'),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: DataTable(
+                      columns: const <DataColumn>[
+                        DataColumn(label: Text('Date')),
+                        DataColumn(label: Text('Mobile Number')),
+                        DataColumn(label: Text('Customer Name')),
+                        DataColumn(label: Text('Advance')),
+                        DataColumn(label: Text('Lens Cost')),
+                        DataColumn(label: Text('Frame Cost')),
+                        DataColumn(label: Text('Total')),
+                        DataColumn(label: Text('Action')),
+                      ],
+                      rows: const <DataRow>[
+                        // Populate data rows with actual data
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Implement generate invoice logic
+                    },
+                    child: Text('Generate Invoice'),
+                  ),
                 ],
               ),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Implement generate invoice logic
-            },
-            child: Text('Generate Invoice'),
           ),
         ],
       ),

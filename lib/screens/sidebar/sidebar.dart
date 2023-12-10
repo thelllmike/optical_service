@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:optical_desktop/screens/home.dart';
 import 'package:optical_desktop/screens/addproduct.dart';
 import 'package:optical_desktop/screens/invoice.dart';
+import 'package:optical_desktop/screens/employee.dart';
+import 'package:optical_desktop/screens/expences.dart';
 import '../billing.dart';  // Import Homescreen
 
 class Sidebar extends StatelessWidget {
@@ -29,6 +31,20 @@ class Sidebar extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => InvoiceScreen()),
+            );
+            break;
+
+           case 5: // Update this index to match where 'Add Employee' is in your destinations list
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => EmployeeScreen()), // Navigate to EmployeeScreen
+            );
+            break;
+
+              case 6: // Assuming 6 is the index for 'Expenses'
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ExpensesScreen()), // Navigate to ExpensesScreen
             );
             break;
 
