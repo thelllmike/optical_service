@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:optical_desktop/screens/sidebar/sidebar.dart';
+import 'package:optical_desktop/screens/sidebar/sidebar.dart'; // Ensure this import is correct
 
 class AddProductScreen extends StatelessWidget {
   @override
@@ -8,35 +8,46 @@ class AddProductScreen extends StatelessWidget {
       appBar: AppBar(title: Text('Add Product')),
       body: Row(
         children: <Widget>[
-          Sidebar(), // Use the Sidebar widget from sidebar.dart
+          Sidebar(), // Added Sidebar
           VerticalDivider(thickness: 1, width: 1),
           Expanded(
-            child: SingleChildScrollView( // Allows for scrolling if content is too long
+            flex: 1,
+            child: SingleChildScrollView(
               padding: EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  ProductFormSection(title: 'Add Frames', fields: [
-                    'Frame',
-                    'Brand',
-                    'Size',
-                    'Frame Stock',
-                    'Model',
-                    'Color',
-                    'Quantity',
-                    'Selling Price',
-                    'Whole Price',
-                  ]),
-                  SizedBox(height: 24), // Spacing between sections
-                  ProductFormSection(title: 'Add Lenses', fields: [
-                    'Lens Category',
-                    'Coating',
-                    'Lens Stock',
-                    'Selling sale',
-                    'whole sale',
-                    'Quantity',
-                  ]),
+              child: ProductFormSection(
+                title: 'Add Lenses',
+                fields: [
+                  'Lens Category',
+                  'Coating',
+                  'Lens Stock',
+                  'Selling Price',
+                  'Cost',
+                
                 ],
+                tableHeaders: ['Category', 'Coating', 'Stock', ' S.Price','Cost'], // Add your table headers
+                tableData: [], // Add your table data
+              ),
+            ),
+          ),
+          VerticalDivider(thickness: 1, width: 1),
+          Expanded(
+            flex: 1,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(16.0),
+              child: ProductFormSection(
+                title: 'Add Frames',
+                fields: [
+                  'Frame',
+                  'Brand',
+                  'Size',
+                  'Frame Stock',
+                  'Model',
+                  'Color',
+                  'Selling Price',
+                  'Wholesale Price',
+                ],
+                tableHeaders: ['Frame', 'Brand', 'Size','Qnt', 'Model', 'Color'  ,'S.price','Cost' ], // Add your table headers
+                tableData: [], // Add your table data
               ),
             ),
           ),
@@ -49,11 +60,15 @@ class AddProductScreen extends StatelessWidget {
 class ProductFormSection extends StatefulWidget {
   final String title;
   final List<String> fields;
+  final List<String> tableHeaders;
+  final List<List<String>> tableData;
 
   const ProductFormSection({
     Key? key,
     required this.title,
     required this.fields,
+    required this.tableHeaders,
+    required this.tableData,
   }) : super(key: key);
 
   @override
@@ -93,10 +108,12 @@ class _ProductFormSectionState extends State<ProductFormSection> {
     formFields.add(ElevatedButton(
       onPressed: () {
         // Implement your logic to handle form submission
-        // You can access the text of each field using controllers[index].text
       },
       child: Text('Save'),
     ));
+
+    formFields.add(SizedBox(height: 16));
+    formFields.add(buildTable()); // Add the table to the form
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,8 +131,20 @@ class _ProductFormSectionState extends State<ProductFormSection> {
             ),
           ),
         ),
-        // Placeholder for the list of added products if needed
       ],
+    );
+  }
+
+  Widget buildTable() {
+    return DataTable(
+      columns: widget.tableHeaders
+          .map((header) => DataColumn(label: Text(header)))
+          .toList(),
+      rows: widget.tableData
+          .map((row) => DataRow(
+                cells: row.map((cell) => DataCell(Text(cell))).toList(),
+              ))
+          .toList(),
     );
   }
 }
