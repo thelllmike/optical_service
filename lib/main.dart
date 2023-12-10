@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:optical_desktop/screens/login.dart';
+import 'package:optical_desktop/screens/register.dart';
 import 'screens/billing.dart';
 import 'screens/home.dart';  // Assuming you have a billing.dart file inside a screens folder
 
@@ -22,7 +24,7 @@ class MyApp extends StatelessWidget {
         // Add other dark theme properties if needed
       ),
       themeMode: ThemeMode.dark, // Set theme mode to dark
-      home:  Homescreen(), // Ensure you have a constructor marked as const in BillScreen
+      home:  RegisterScreen(), // Ensure you have a constructor marked as const in BillScreen
       debugShowCheckedModeBanner: false,
     );
   }
