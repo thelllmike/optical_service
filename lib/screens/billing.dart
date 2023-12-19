@@ -4,6 +4,16 @@ import 'package:optical_desktop/screens/sidebar/sidebar.dart';
 
 final ValueNotifier<ThemeData> _themeNotifier = ValueNotifier(ThemeData.dark());
 
+class Item {
+  String description;
+  int quantity;
+  double unitPrice;
+
+  Item({required this.description, required this.quantity, required this.unitPrice});
+
+  double get totalAmount => quantity * unitPrice;
+}
+
 
 class MyApp extends StatelessWidget {
   @override
@@ -32,6 +42,17 @@ class _BillScreenState extends State<BillScreen> {
    // Define a map to hold the text editing controllers
   Map<String, TextEditingController> _controllers = {};
   DateTime _selectedDate = DateTime.now();
+
+  List<Item> items = [
+    Item(description: 'Item 1', quantity: 1, unitPrice: 10.0),
+    // Add more items as needed
+  ];
+
+  void _deleteItem(int index) {
+    setState(() {
+      items.removeAt(index);
+    });
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -142,7 +163,7 @@ Widget _buildDropdownField(String label, List<String> items) {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _buildLensDetailsSection(), flex: 1),
+                Expanded(child: _buildItemTable(), flex: 1),
                 SizedBox(width: 8),
                 // Expanded(child: _buildPrescriptionDetailsSection(), flex: 1),
                 SizedBox(width: 8),
@@ -252,6 +273,37 @@ Widget _buildEditableTable() {
     ),
   );
 }
+
+
+//description table
+
+Widget _buildItemTable() {
+  return DataTable(
+    columns: const [
+      DataColumn(label: Text('Description')),
+      DataColumn(label: Text('Qty')),
+      DataColumn(label: Text('Unit Price')),
+      DataColumn(label: Text('Total Amount')),
+      DataColumn(label: Text('Delete')), // Column for delete button
+    ],
+    rows: List<DataRow>.generate(
+      items.length,
+      (index) => DataRow(
+        cells: [
+          DataCell(Text(items[index].description)),
+          DataCell(Text(items[index].quantity.toString())),
+          DataCell(Text('${items[index].unitPrice}')),
+          DataCell(Text('${items[index].totalAmount}')),
+          DataCell(IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () => _deleteItem(index),
+          )),
+        ],
+      ),
+    ),
+  );
+}
+
 
 
   Widget _buildPaymentDetailsSection() {
