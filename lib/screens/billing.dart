@@ -29,6 +29,8 @@ class BillScreen extends StatefulWidget {
 
 class _BillScreenState extends State<BillScreen> {
   bool _isSidebarVisible = false;
+   // Define a map to hold the text editing controllers
+  Map<String, TextEditingController> _controllers = {};
   DateTime _selectedDate = DateTime.now();
 
   Future<void> _selectDate(BuildContext context) async {
@@ -76,6 +78,35 @@ class _BillScreenState extends State<BillScreen> {
     );
   }
 
+Widget _buildDropdownField(String label, List<String> items) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 1),
+    child: DropdownButtonFormField(
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(3.0),
+          borderSide: BorderSide(),
+        ),
+        contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+        isDense: true, // Use this to match the TextField's height
+      ),
+      items: items.map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(
+            value,
+            style: TextStyle(fontSize: 10), // Smaller font size for items
+          ),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {},
+      style: TextStyle(fontSize: 10), // Smaller font size
+      // Match the height of the TextField
+      isExpanded: true, // Expand the dropdown to fill the space
+    ),
+  );
+}
 
 
   Widget _buildMainContent() {
@@ -94,24 +125,62 @@ class _BillScreenState extends State<BillScreen> {
                 Expanded(child: _buildInvoiceAndDeliveryDetailsSection(), flex: 1),
               ],
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(child: _buildLensDetailsSection(), flex: 1),
                 SizedBox(width: 8),
-                Expanded(child: _buildPrescriptionDetailsSection(), flex: 1),
+                // Expanded(child: _buildPrescriptionDetailsSection(), flex: 1),
                 SizedBox(width: 8),
-                Expanded(child: _buildPaymentDetailsSection(), flex: 1),
+                  Expanded(child: _buildPrescriptionDetailsSection(), flex: 1), 
+                // Expanded(child: _buildPaymentDetailsSection(), flex: 1),
+                //table
               ],
             ),
-            SizedBox(height: 16),
-            _buildSaveAndPrintButton(),
+              SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _buildLensDetailsSection(), flex: 1),
+                SizedBox(width: 8),
+                // Expanded(child: _buildPrescriptionDetailsSection(), flex: 1),
+                SizedBox(width: 8),
+                 Expanded(child: _buildPaymentDetailsSection(), flex: 1),
+              ],
+            ),
+
+            
+          
           ],
         ),
       ),
     );
   }
+
+  // This method builds the prescription details section
+Widget _buildPrescriptionDetailsSection() {
+  return _buildDetailsCard('Prescription Details', [
+    _buildEditableTable(),
+  ]);
+}
+
+Widget _buildEditableCell(String key) {
+  // Create a controller if it doesn't exist
+  _controllers.putIfAbsent(key, () => TextEditingController());
+
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: TextFormField(
+      controller: _controllers[key],
+      decoration: InputDecoration(
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      ),
+    ),
+  );
+}
+
 
   Widget _buildCustomerDetailsSection() {
     return _buildDetailsCard('Customer Details', [
@@ -152,16 +221,38 @@ class _BillScreenState extends State<BillScreen> {
     ]);
   }
 
-  Widget _buildPrescriptionDetailsSection() {
-    return _buildDetailsCard('Prescription Details', [
-      _buildTextField('Type'),
-      _buildTextField('SH'),
-      _buildTextField('SPH'),
-      _buildTextField('CYL'),
-      _buildTextField('AXIS'),
-      _buildTextField('ADD'),
-    ]);
-  }
+// This method builds the editable table for the prescription details
+Widget _buildEditableTable() {
+  return SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: DataTable(
+      columns: const [
+        DataColumn(label: Text('Type')),
+        DataColumn(label: Text('SPH')),
+        DataColumn(label: Text('CYL')),
+        DataColumn(label: Text('AXIS')),
+        DataColumn(label: Text('ADD')),
+      ],
+      rows: [
+        DataRow(cells: [
+          DataCell(Text('R')),
+          DataCell(_buildEditableCell('R_SPH')),
+          DataCell(_buildEditableCell('R_CYL')),
+          DataCell(_buildEditableCell('R_AXIS')),
+          DataCell(_buildEditableCell('R_ADD')),
+        ]),
+        DataRow(cells: [
+          DataCell(Text('L')),
+          DataCell(_buildEditableCell('L_SPH')),
+          DataCell(_buildEditableCell('L_CYL')),
+          DataCell(_buildEditableCell('L_AXIS')),
+          DataCell(_buildEditableCell('L_ADD')),
+        ]),
+      ],
+    ),
+  );
+}
+
 
   Widget _buildPaymentDetailsSection() {
     return _buildDetailsCard('Payment Details', [
@@ -172,7 +263,7 @@ class _BillScreenState extends State<BillScreen> {
       _buildTextField('Advance Paid'),
       _buildTextField('Balance Amount'),
       _buildDropdownField('Pay Type', ['Cash', 'Card']),
-      _buildDropdownField('Account', ['Account1', 'Account2']),
+     
     ]);
   }
 
@@ -207,58 +298,47 @@ class _BillScreenState extends State<BillScreen> {
     );
   }
 
-  Widget _buildTextField(String label, {int maxLines = 1}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: TextField(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4.0),
-            borderSide: BorderSide(),
-          ),
-          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 5.0),
+Widget _buildTextField(String label, {int maxLines = 1}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 2),
+    child: TextField(
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(4.0),
+          borderSide: BorderSide(),
         ),
-        maxLines: maxLines,
-        style: TextStyle(fontSize: 14),
+        contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0), // Smaller padding
+        isDense: true, // Added to reduce the height
       ),
-    );
-  }
+      maxLines: maxLines,
+      style: TextStyle(fontSize: 12), // Smaller font size
+    ),
+  );
+}
+ 
 
-  Widget _buildDropdownField(String label, List<String> items) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: DropdownButtonFormField(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(),
-        ),
-        items: items.map<DropdownMenuItem<String>>((String value) {
-          return DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          );
-        }).toList(),
-        onChanged: (String? newValue) {},
-      ),
-    );
-  }
 
-  Widget _buildDatePickerField(String label) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: GestureDetector(
-        onTap: () => _selectDate(context),
-        child: AbsorbPointer(
-          child: TextFormField(
-            decoration: InputDecoration(
-              labelText: label,
-              border: OutlineInputBorder(),
-            ),
-            controller: TextEditingController(text: _selectedDate.toLocal().toString().split(' ')[0]),
+Widget _buildDatePickerField(String label) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: GestureDetector(
+      onTap: () => _selectDate(context),
+      child: AbsorbPointer(
+        child: TextFormField(
+          decoration: InputDecoration(
+            labelText: label,
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0), // Smaller padding
+            isDense: true, // Added to reduce the height
           ),
+          controller: TextEditingController(text: _selectedDate.toLocal().toString().split(' ')[0]),
+          style: TextStyle(fontSize: 12), // Smaller font size
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
+ 
 }
