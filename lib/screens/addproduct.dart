@@ -210,13 +210,34 @@ class _ProductFormSectionState extends State<ProductFormSection> {
     List<DataColumn> columns = widget.tableHeaders
         .map((header) => DataColumn(label: Text(header)))
         .toList();
+        columns.add(DataColumn(label: Text('Actions')));
+     
+     
 
-    List<DataRow> rows = tableData
-        .map((data) => DataRow(
-              cells:
-                  data.map((cell) => DataCell(Text(cell.toString()))).toList(),
-            ))
-        .toList();
+    List<DataRow> rows = tableData.map((data) {
+        List<DataCell> cells = data.map((cell) => DataCell(Text(cell.toString()))).toList();
+
+        // Add the action buttons to each row
+        cells.add(DataCell(Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                // Implement edit functionality
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () {
+                // Implement delete functionality
+              },
+            ),
+          ],
+        )));
+
+        return DataRow(cells: cells);
+    }).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
