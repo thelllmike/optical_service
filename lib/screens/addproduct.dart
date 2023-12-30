@@ -128,6 +128,58 @@ class _ProductFormSectionState extends State<ProductFormSection> {
     super.dispose();
   }
 
+  Future<void> updateProduct(String endpoint, int id, Map<String, dynamic> productData) async {
+  try {
+    var response = await http.put(
+      Uri.parse('$baseUrl/$endpoint/$id'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(productData),
+    );
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Product Updated Successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error Updating Product: ${response.body}')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Network Error: $e')));
+  }
+}
+
+Future<void> deleteProduct(String endpoint, int id) async {
+  try {
+    var response = await http.delete(
+      Uri.parse('$baseUrl/$endpoint/$id'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+    print('Response Status Code: ${response.statusCode}');
+    print('Response Body: ${response.body}');
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Product Deleted Successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error Deleting Product: ${response.body}')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Network Error: $e')));
+  }
+}
+
+
+
+
   Future<void> fetchData() async {
     String fetchEndpoint = widget.endpoint == 'add_lens' ? 'lenses' : 'frames';
     try {
@@ -221,18 +273,56 @@ class _ProductFormSectionState extends State<ProductFormSection> {
         cells.add(DataCell(Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            IconButton(
-              icon: Icon(Icons.edit),
+           IconButton(
+  icon: Icon(Icons.edit),
+  onPressed: () {
+    int id = int.parse(data[0]); // Assuming ID is the first element
+    Map<String, dynamic> productData = {
+      // Fill with the product data you want to update
+    };
+    updateProduct(widget.endpoint, id, productData);
+  },
+),
+IconButton(
+  icon: Icon(Icons.delete),
+  onPressed: () {
+    print("Data at index 0: ${data[0]}");
+    if (!RegExp(r'^\d+$').hasMatch(data[0])) {
+      print("Invalid ID: ${data[0]}");
+      // Optionally show a message to the user
+      return;
+    }
+    int id = int.parse(data[0]);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+          print("Showing dialog"); // Check if this gets printed
+        return AlertDialog(
+          title: Text('Confirm Delete'),
+          content: Text('Are you sure you want to delete this item?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
               onPressed: () {
-                // Implement edit functionality
+                Navigator.of(context).pop();
               },
             ),
-            IconButton(
-              icon: Icon(Icons.delete),
+            TextButton(
+              child: Text('Delete'),
               onPressed: () {
-                // Implement delete functionality
+                deleteProduct(widget.endpoint, id);
+                Navigator.of(context).pop();
               },
             ),
+          ],
+        );
+      },
+    );
+  },
+),
+
+            
           ],
         )));
 
