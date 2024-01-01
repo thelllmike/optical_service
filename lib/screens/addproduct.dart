@@ -302,18 +302,43 @@ Future<void> fetchData() async {
           });
         },
       ),
-      IconButton(
-        icon: Icon(Icons.delete),
-        onPressed: () {
-          int? id = int.tryParse(data[0]); // ID is at index 0
-          if (id != null) {
-            // Confirm deletion and then call deleteProduct
-            // Add your dialog or confirmation method here
-          } else {
-            print("Invalid ID: ${data[0]}");
-          }
+   IconButton(
+  icon: Icon(Icons.delete),
+  onPressed: () {
+    int? id = int.tryParse(data[0]); // ID is at index 0
+    if (id != null) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Confirm Delete'),
+            content: Text('Are you sure you want to delete this item?'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text('Delete'),
+                onPressed: () {
+                  deleteProduct(widget.endpoint, id).then((_) {
+                    Navigator.of(context).pop(); // Close the dialog
+                    fetchData(); // Fetch data again or update the tableData list
+                  });
+                },
+              ),
+            ],
+          );
         },
-      ),
+      );
+    } else {
+      print("Invalid ID: ${data[0]}");
+    }
+  },
+),
+
     ],
   )));
 
