@@ -205,7 +205,7 @@ Widget _buildEditableCell(String key) {
 
   Widget _buildCustomerDetailsSection() {
     return _buildDetailsCard('Customer Details', [
-      _buildDropdownField('Mobile Number', ['1234567890', '9876543210']),
+       _buildTextField('Mobile Number'),
       _buildTextField('Full Name'),
       _buildTextField('NIC Number'),
       _buildTextField('Address', maxLines: 3),

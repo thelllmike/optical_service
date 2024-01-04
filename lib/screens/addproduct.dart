@@ -29,7 +29,7 @@ class AddProductScreen extends StatelessWidget {
           Sidebar(), // Uncomment and ensure the Sidebar widget is correctly implemented
           VerticalDivider(thickness: 1, width: 1),
           Expanded(
-            flex: 4,
+            flex: 5,
             child: SingleChildScrollView(
               padding: EdgeInsets.all(16.0),
               child: ProductFormSection(
@@ -37,6 +37,7 @@ class AddProductScreen extends StatelessWidget {
                 fields: [
                   'Lens Category',
                   'Coating',
+                  'Power',
                   'Lens Stock',
                   'Selling Price',
                   'Cost'
@@ -45,6 +46,7 @@ class AddProductScreen extends StatelessWidget {
                 tableHeaders: [
                   'Category',
                   'Coating',
+                  'power',
                   'stock',
                   'selling_price',
                   'Cost'
@@ -55,7 +57,7 @@ class AddProductScreen extends StatelessWidget {
           ),
           VerticalDivider(thickness: 1, width: 1),
           Expanded(
-            flex: 6,
+            flex: 5,
             child: SingleChildScrollView(
               padding: EdgeInsets.all(16.0),
               child: ProductFormSection(
@@ -211,6 +213,7 @@ Future<void> fetchData() async {
       productData = {
         "category": controllers[0].text,
         "coating": controllers[1].text,
+        "power": controllers[1].text,
         "stock": controllers[2].text,
         "selling_price": controllers[3].text,
         "cost": controllers[4].text,
@@ -376,7 +379,7 @@ Future<void> fetchData() async {
                   child: Text('Save'),
                 ),
                 DataTable(
-                  columnSpacing: 25, // Add columnSpacing here
+                  columnSpacing: 15, // Add columnSpacing here
                   columns: columns,
                   rows: rows,
                 ),
