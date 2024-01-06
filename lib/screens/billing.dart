@@ -1,8 +1,13 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart';
 
 
+
+
 final ValueNotifier<ThemeData> _themeNotifier = ValueNotifier(ThemeData.dark());
+
 
 class Item {
   String description;
@@ -38,21 +43,54 @@ class BillScreen extends StatefulWidget {
 }
 
 class _BillScreenState extends State<BillScreen> {
-  bool _isSidebarVisible = false;
-   // Define a map to hold the text editing controllers
+
+  List<String> frames = [];
+  List<String> brands = [];
+  List<String> sizes = [];
+  List<String> models = [];
+  List<String> colors = [];
+ 
+
   Map<String, TextEditingController> _controllers = {};
   DateTime _selectedDate = DateTime.now();
+  List<Item> items = [Item(description: 'Item 1', quantity: 1, unitPrice: 10.0)];
+  bool _isSidebarVisible = false;
 
-  List<Item> items = [
-    Item(description: 'Item 1', quantity: 1, unitPrice: 10.0),
-    // Add more items as needed
-  ];
 
   void _deleteItem(int index) {
     setState(() {
       items.removeAt(index);
     });
   }
+
+
+ @override
+  void initState() {
+    super.initState();
+     _fetchFramesData();
+   
+  }
+
+ Future<void> _fetchFramesData() async {
+    try {
+      final response = await http.get(Uri.parse('http://localhost:8001/dropdown/onlyframe'));
+      if (response.statusCode == 200) {
+        List<String> fetchedFrames = (json.decode(response.body) as List)
+            .map((data) => data.toString()) // Assuming the API returns a list of strings
+            .toList();
+
+        setState(() {
+          frames = fetchedFrames;
+        });
+      } else {
+        // Handle the error; maybe show a message to the user
+      }
+    } catch (e) {
+      // Handle any exceptions; maybe show an error message
+    }
+  }
+
+
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -67,6 +105,9 @@ class _BillScreenState extends State<BillScreen> {
       });
   }
 
+
+  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,7 +115,7 @@ class _BillScreenState extends State<BillScreen> {
         title: Text('Optical Service'),
         actions: [
           IconButton(
-            icon: Icon(Icons.settings),
+            icon: Icon(Icons.notifications),
             onPressed: () {
               _themeNotifier.value = (_themeNotifier.value.brightness == Brightness.dark)
                   ? ThemeData.light()
@@ -215,13 +256,14 @@ Widget _buildEditableCell(String key) {
 
   Widget _buildFrameDetailsSection() {
     return _buildDetailsCard('Frame Details', [
-      _buildDropdownField('Frame', ['Frame1', 'Frame2']),
-      _buildDropdownField('Brand', ['Brand1', 'Brand2']),
-      _buildTextField('Model'),
-      _buildTextField('Size'),
-      _buildTextField('Color'),
-      _buildTextField('Frame Stock'),
-      _buildTextField('Selling'),
+      _buildDropdownField('Frame', frames),
+     _buildDropdownField('Brand', brands),
+      _buildDropdownField('Size', sizes),
+      _buildTextField('Quntity'),
+      _buildDropdownField('Model', models),
+      _buildDropdownField('Color', colors),
+      _buildTextField('Price'),
+    
     ]);
   }
 
@@ -236,9 +278,11 @@ Widget _buildEditableCell(String key) {
   Widget _buildLensDetailsSection() {
     return _buildDetailsCard('Lens Details', [
       _buildDropdownField('Lens Category', ['Category1', 'Category2']),
-      _buildTextField('Coating'),
-      _buildTextField('Lens Stock'),
-      _buildTextField('Selling'),
+      _buildDropdownField('Coating', ['Coating1', 'Coating1']),
+      _buildDropdownField('Power', ['-1', '+2']),
+      _buildTextField('Quntity'),
+      _buildTextField('Price'),
+ 
     ]);
   }
 
@@ -360,11 +404,11 @@ Widget _buildTextField(String label, {int maxLines = 1}) {
           borderRadius: BorderRadius.circular(4.0),
           borderSide: BorderSide(),
         ),
-        contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0), // Smaller padding
+        contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0), // Smaller padding
         isDense: true, // Added to reduce the height
       ),
       maxLines: maxLines,
-      style: TextStyle(fontSize: 12), // Smaller font size
+      style: TextStyle(fontSize: 14), // Smaller font size
     ),
   );
 }
