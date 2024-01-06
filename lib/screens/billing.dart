@@ -3,22 +3,20 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart';
 
-
-
-
 final ValueNotifier<ThemeData> _themeNotifier = ValueNotifier(ThemeData.dark());
-
 
 class Item {
   String description;
   int quantity;
   double unitPrice;
 
-  Item({required this.description, required this.quantity, required this.unitPrice});
+  Item(
+      {required this.description,
+      required this.quantity,
+      required this.unitPrice});
 
   double get totalAmount => quantity * unitPrice;
 }
-
 
 class MyApp extends StatelessWidget {
   @override
@@ -36,26 +34,24 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
 class BillScreen extends StatefulWidget {
   @override
   _BillScreenState createState() => _BillScreenState();
 }
 
 class _BillScreenState extends State<BillScreen> {
-
   List<String> frames = [];
   List<String> brands = [];
   List<String> sizes = [];
   List<String> models = [];
   List<String> colors = [];
- 
 
   Map<String, TextEditingController> _controllers = {};
   DateTime _selectedDate = DateTime.now();
-  List<Item> items = [Item(description: 'Item 1', quantity: 1, unitPrice: 10.0)];
+  List<Item> items = [
+    Item(description: 'Item 1', quantity: 1, unitPrice: 10.0)
+  ];
   bool _isSidebarVisible = false;
-
 
   void _deleteItem(int index) {
     setState(() {
@@ -63,20 +59,87 @@ class _BillScreenState extends State<BillScreen> {
     });
   }
 
-
- @override
+  @override
   void initState() {
     super.initState();
-     _fetchFramesData();
-   
+    _fetchFramesData();
+    _fetchSizesData();
+    _fetchBrandsData();
+    _fetchColorsData();
+    _fetchModelsData();
   }
 
- Future<void> _fetchFramesData() async {
+  Future<void> _fetchModelsData() async {
     try {
-      final response = await http.get(Uri.parse('http://localhost:8001/dropdown/onlyframe'));
+      final response =
+          await http.get(Uri.parse('http://localhost:8001/dropdown/onlymodel'));
+      if (response.statusCode == 200) {
+        List<String> fetchedModels = (json.decode(response.body) as List)
+            .map((data) =>
+                data.toString()) // Assuming the API returns a list of strings
+            .toList();
+
+        setState(() {
+          models = fetchedModels;
+        });
+      } else {
+        // Handle the error; maybe show a message to the user
+      }
+    } catch (e) {
+      // Handle any exceptions; maybe show an error message
+    }
+  }
+
+  Future<void> _fetchColorsData() async {
+    try {
+      final response =
+          await http.get(Uri.parse('http://localhost:8001/dropdown/onlycolor'));
+      if (response.statusCode == 200) {
+        List<String> fetchedcolors = (json.decode(response.body) as List)
+            .map((data) =>
+                data.toString()) // Assuming the API returns a list of strings
+            .toList();
+
+        setState(() {
+          colors = fetchedcolors;
+        });
+      } else {
+        // Handle the error; maybe show a message to the user
+      }
+    } catch (e) {
+      // Handle any exceptions; maybe show an error message
+    }
+  }
+
+  Future<void> _fetchBrandsData() async {
+    try {
+      final response =
+          await http.get(Uri.parse('http://localhost:8001/dropdown/onlybrand'));
+      if (response.statusCode == 200) {
+        List<String> fetchedBrands = (json.decode(response.body) as List)
+            .map((data) =>
+                data.toString()) // Assuming the API returns a list of strings
+            .toList();
+
+        setState(() {
+          brands = fetchedBrands;
+        });
+      } else {
+        // Handle the error; maybe show a message to the user
+      }
+    } catch (e) {
+      // Handle any exceptions; maybe show an error message
+    }
+  }
+
+  Future<void> _fetchFramesData() async {
+    try {
+      final response =
+          await http.get(Uri.parse('http://localhost:8001/dropdown/onlyframe'));
       if (response.statusCode == 200) {
         List<String> fetchedFrames = (json.decode(response.body) as List)
-            .map((data) => data.toString()) // Assuming the API returns a list of strings
+            .map((data) =>
+                data.toString()) // Assuming the API returns a list of strings
             .toList();
 
         setState(() {
@@ -90,7 +153,26 @@ class _BillScreenState extends State<BillScreen> {
     }
   }
 
+  Future<void> _fetchSizesData() async {
+    try {
+      final response =
+          await http.get(Uri.parse('http://localhost:8001/dropdown/onlysize'));
+      if (response.statusCode == 200) {
+        List<String> fetchedSizes = (json.decode(response.body) as List)
+            .map((data) =>
+                data.toString()) // Assuming the API returns a list of strings
+            .toList();
 
+        setState(() {
+          sizes = fetchedSizes;
+        });
+      } else {
+        // Handle the error; maybe show a message to the user
+      }
+    } catch (e) {
+      // Handle any exceptions; maybe show an error message
+    }
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -105,9 +187,6 @@ class _BillScreenState extends State<BillScreen> {
       });
   }
 
-
-  
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,16 +196,17 @@ class _BillScreenState extends State<BillScreen> {
           IconButton(
             icon: Icon(Icons.notifications),
             onPressed: () {
-              _themeNotifier.value = (_themeNotifier.value.brightness == Brightness.dark)
-                  ? ThemeData.light()
-                  : ThemeData.dark();
+              _themeNotifier.value =
+                  (_themeNotifier.value.brightness == Brightness.dark)
+                      ? ThemeData.light()
+                      : ThemeData.dark();
             },
           )
         ],
       ),
-  body: Row(
+      body: Row(
         children: [
-            Sidebar(),
+          Sidebar(),
           Expanded(child: _buildMainContent()),
         ],
       ),
@@ -140,36 +220,35 @@ class _BillScreenState extends State<BillScreen> {
     );
   }
 
-Widget _buildDropdownField(String label, List<String> items) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 1),
-    child: DropdownButtonFormField(
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(3.0),
-          borderSide: BorderSide(),
-        ),
-        contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-        isDense: true, // Use this to match the TextField's height
-      ),
-      items: items.map<DropdownMenuItem<String>>((String value) {
-        return DropdownMenuItem<String>(
-          value: value,
-          child: Text(
-            value,
-            style: TextStyle(fontSize: 10), // Smaller font size for items
+  Widget _buildDropdownField(String label, List<String> items) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 1),
+      child: DropdownButtonFormField(
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(3.0),
+            borderSide: BorderSide(),
           ),
-        );
-      }).toList(),
-      onChanged: (String? newValue) {},
-      style: TextStyle(fontSize: 10), // Smaller font size
-      // Match the height of the TextField
-      isExpanded: true, // Expand the dropdown to fill the space
-    ),
-  );
-}
-
+          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+          isDense: true, // Use this to match the TextField's height
+        ),
+        items: items.map<DropdownMenuItem<String>>((String value) {
+          return DropdownMenuItem<String>(
+            value: value,
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 10), // Smaller font size for items
+            ),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {},
+        style: TextStyle(fontSize: 10), // Smaller font size
+        // Match the height of the TextField
+        isExpanded: true, // Expand the dropdown to fill the space
+      ),
+    );
+  }
 
   Widget _buildMainContent() {
     return SingleChildScrollView(
@@ -184,7 +263,8 @@ Widget _buildDropdownField(String label, List<String> items) {
                 SizedBox(width: 8),
                 Expanded(child: _buildFrameDetailsSection(), flex: 1),
                 SizedBox(width: 8),
-                Expanded(child: _buildInvoiceAndDeliveryDetailsSection(), flex: 1),
+                Expanded(
+                    child: _buildInvoiceAndDeliveryDetailsSection(), flex: 1),
               ],
             ),
             SizedBox(height: 8),
@@ -195,12 +275,12 @@ Widget _buildDropdownField(String label, List<String> items) {
                 SizedBox(width: 8),
                 // Expanded(child: _buildPrescriptionDetailsSection(), flex: 1),
                 SizedBox(width: 8),
-                  Expanded(child: _buildPrescriptionDetailsSection(), flex: 1), 
+                Expanded(child: _buildPrescriptionDetailsSection(), flex: 1),
                 // Expanded(child: _buildPaymentDetailsSection(), flex: 1),
                 //table
               ],
             ),
-              SizedBox(height: 8),
+            SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -208,12 +288,9 @@ Widget _buildDropdownField(String label, List<String> items) {
                 SizedBox(width: 8),
                 // Expanded(child: _buildPrescriptionDetailsSection(), flex: 1),
                 SizedBox(width: 8),
-                 Expanded(child: _buildPaymentDetailsSection(), flex: 1),
+                Expanded(child: _buildPaymentDetailsSection(), flex: 1),
               ],
             ),
-
-            
-          
           ],
         ),
       ),
@@ -221,32 +298,31 @@ Widget _buildDropdownField(String label, List<String> items) {
   }
 
   // This method builds the prescription details section
-Widget _buildPrescriptionDetailsSection() {
-  return _buildDetailsCard('Prescription Details', [
-    _buildEditableTable(),
-  ]);
-}
+  Widget _buildPrescriptionDetailsSection() {
+    return _buildDetailsCard('Prescription Details', [
+      _buildEditableTable(),
+    ]);
+  }
 
-Widget _buildEditableCell(String key) {
-  // Create a controller if it doesn't exist
-  _controllers.putIfAbsent(key, () => TextEditingController());
+  Widget _buildEditableCell(String key) {
+    // Create a controller if it doesn't exist
+    _controllers.putIfAbsent(key, () => TextEditingController());
 
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: TextFormField(
-      controller: _controllers[key],
-      decoration: InputDecoration(
-        border: OutlineInputBorder(),
-        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextFormField(
+        controller: _controllers[key],
+        decoration: InputDecoration(
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildCustomerDetailsSection() {
     return _buildDetailsCard('Customer Details', [
-       _buildTextField('Mobile Number'),
+      _buildTextField('Mobile Number'),
       _buildTextField('Full Name'),
       _buildTextField('NIC Number'),
       _buildTextField('Address', maxLines: 3),
@@ -257,13 +333,12 @@ Widget _buildEditableCell(String key) {
   Widget _buildFrameDetailsSection() {
     return _buildDetailsCard('Frame Details', [
       _buildDropdownField('Frame', frames),
-     _buildDropdownField('Brand', brands),
+      _buildDropdownField('Brand', brands),
       _buildDropdownField('Size', sizes),
       _buildTextField('Quntity'),
       _buildDropdownField('Model', models),
       _buildDropdownField('Color', colors),
       _buildTextField('Price'),
-    
     ]);
   }
 
@@ -282,73 +357,69 @@ Widget _buildEditableCell(String key) {
       _buildDropdownField('Power', ['-1', '+2']),
       _buildTextField('Quntity'),
       _buildTextField('Price'),
- 
     ]);
   }
 
 // This method builds the editable table for the prescription details
-Widget _buildEditableTable() {
-  return SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    child: DataTable(
-      columns: const [
-        DataColumn(label: Text('Type')),
-        DataColumn(label: Text('SPH')),
-        DataColumn(label: Text('CYL')),
-        DataColumn(label: Text('AXIS')),
-        DataColumn(label: Text('ADD')),
-      ],
-      rows: [
-        DataRow(cells: [
-          DataCell(Text('R')),
-          DataCell(_buildEditableCell('R_SPH')),
-          DataCell(_buildEditableCell('R_CYL')),
-          DataCell(_buildEditableCell('R_AXIS')),
-          DataCell(_buildEditableCell('R_ADD')),
-        ]),
-        DataRow(cells: [
-          DataCell(Text('L')),
-          DataCell(_buildEditableCell('L_SPH')),
-          DataCell(_buildEditableCell('L_CYL')),
-          DataCell(_buildEditableCell('L_AXIS')),
-          DataCell(_buildEditableCell('L_ADD')),
-        ]),
-      ],
-    ),
-  );
-}
-
+  Widget _buildEditableTable() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columns: const [
+          DataColumn(label: Text('Type')),
+          DataColumn(label: Text('SPH')),
+          DataColumn(label: Text('CYL')),
+          DataColumn(label: Text('AXIS')),
+          DataColumn(label: Text('ADD')),
+        ],
+        rows: [
+          DataRow(cells: [
+            DataCell(Text('R')),
+            DataCell(_buildEditableCell('R_SPH')),
+            DataCell(_buildEditableCell('R_CYL')),
+            DataCell(_buildEditableCell('R_AXIS')),
+            DataCell(_buildEditableCell('R_ADD')),
+          ]),
+          DataRow(cells: [
+            DataCell(Text('L')),
+            DataCell(_buildEditableCell('L_SPH')),
+            DataCell(_buildEditableCell('L_CYL')),
+            DataCell(_buildEditableCell('L_AXIS')),
+            DataCell(_buildEditableCell('L_ADD')),
+          ]),
+        ],
+      ),
+    );
+  }
 
 //description table
 
-Widget _buildItemTable() {
-  return DataTable(
-    columns: const [
-      DataColumn(label: Text('Description')),
-      DataColumn(label: Text('Qty')),
-      DataColumn(label: Text('Unit Price')),
-      DataColumn(label: Text('Total Amount')),
-      DataColumn(label: Text('Delete')), // Column for delete button
-    ],
-    rows: List<DataRow>.generate(
-      items.length,
-      (index) => DataRow(
-        cells: [
-          DataCell(Text(items[index].description)),
-          DataCell(Text(items[index].quantity.toString())),
-          DataCell(Text('${items[index].unitPrice}')),
-          DataCell(Text('${items[index].totalAmount}')),
-          DataCell(IconButton(
-            icon: Icon(Icons.delete),
-            onPressed: () => _deleteItem(index),
-          )),
-        ],
+  Widget _buildItemTable() {
+    return DataTable(
+      columns: const [
+        DataColumn(label: Text('Description')),
+        DataColumn(label: Text('Qty')),
+        DataColumn(label: Text('Unit Price')),
+        DataColumn(label: Text('Total Amount')),
+        DataColumn(label: Text('Delete')), // Column for delete button
+      ],
+      rows: List<DataRow>.generate(
+        items.length,
+        (index) => DataRow(
+          cells: [
+            DataCell(Text(items[index].description)),
+            DataCell(Text(items[index].quantity.toString())),
+            DataCell(Text('${items[index].unitPrice}')),
+            DataCell(Text('${items[index].totalAmount}')),
+            DataCell(IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () => _deleteItem(index),
+            )),
+          ],
+        ),
       ),
-    ),
-  );
-}
-
-
+    );
+  }
 
   Widget _buildPaymentDetailsSection() {
     return _buildDetailsCard('Payment Details', [
@@ -359,7 +430,6 @@ Widget _buildItemTable() {
       _buildTextField('Advance Paid'),
       _buildTextField('Balance Amount'),
       _buildDropdownField('Pay Type', ['Cash', 'Card']),
-     
     ]);
   }
 
@@ -371,7 +441,8 @@ Widget _buildItemTable() {
         },
         child: Text('Save & Print (F12)'),
         style: ButtonStyle(
-          padding: MaterialStateProperty.all(EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
+          padding: MaterialStateProperty.all(
+              EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
         ),
       ),
     );
@@ -385,7 +456,8 @@ Widget _buildItemTable() {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            Text(title,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             SizedBox(height: 4),
             ...children,
           ],
@@ -394,47 +466,46 @@ Widget _buildItemTable() {
     );
   }
 
-Widget _buildTextField(String label, {int maxLines = 1}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 2),
-    child: TextField(
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4.0),
-          borderSide: BorderSide(),
-        ),
-        contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0), // Smaller padding
-        isDense: true, // Added to reduce the height
-      ),
-      maxLines: maxLines,
-      style: TextStyle(fontSize: 14), // Smaller font size
-    ),
-  );
-}
- 
-
-
-Widget _buildDatePickerField(String label) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: GestureDetector(
-      onTap: () => _selectDate(context),
-      child: AbsorbPointer(
-        child: TextFormField(
-          decoration: InputDecoration(
-            labelText: label,
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0), // Smaller padding
-            isDense: true, // Added to reduce the height
+  Widget _buildTextField(String label, {int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: TextField(
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4.0),
+            borderSide: BorderSide(),
           ),
-          controller: TextEditingController(text: _selectedDate.toLocal().toString().split(' ')[0]),
-          style: TextStyle(fontSize: 12), // Smaller font size
+          contentPadding: EdgeInsets.symmetric(
+              vertical: 12.0, horizontal: 10.0), // Smaller padding
+          isDense: true, // Added to reduce the height
+        ),
+        maxLines: maxLines,
+        style: TextStyle(fontSize: 14), // Smaller font size
+      ),
+    );
+  }
+
+  Widget _buildDatePickerField(String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: GestureDetector(
+        onTap: () => _selectDate(context),
+        child: AbsorbPointer(
+          child: TextFormField(
+            decoration: InputDecoration(
+              labelText: label,
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(
+                  vertical: 8.0, horizontal: 10.0), // Smaller padding
+              isDense: true, // Added to reduce the height
+            ),
+            controller: TextEditingController(
+                text: _selectedDate.toLocal().toString().split(' ')[0]),
+            style: TextStyle(fontSize: 12), // Smaller font size
+          ),
         ),
       ),
-    ),
-  );
-}
-
- 
+    );
+  }
 }
