@@ -64,9 +64,10 @@ class _BillScreenState extends State<BillScreen> {
     super.initState();
     _fetchFramesData();
     _fetchSizesData();
-    _fetchBrandsData();
+    // _fetchBrandsData();
     _fetchColorsData();
     _fetchModelsData();
+    
   }
 
   Future<void> _fetchModelsData() async {
@@ -111,26 +112,26 @@ class _BillScreenState extends State<BillScreen> {
     }
   }
 
-  Future<void> _fetchBrandsData() async {
-    try {
-      final response =
-          await http.get(Uri.parse('http://localhost:8001/dropdown/onlybrand'));
-      if (response.statusCode == 200) {
-        List<String> fetchedBrands = (json.decode(response.body) as List)
-            .map((data) =>
-                data.toString()) // Assuming the API returns a list of strings
-            .toList();
+  // Future<void> _fetchBrandsData() async {
+  //   try {
+  //     final response =
+  //         await http.get(Uri.parse('http://localhost:8001/dropdown/onlybrand'));
+  //     if (response.statusCode == 200) {
+  //       List<String> fetchedBrands = (json.decode(response.body) as List)
+  //           .map((data) =>
+  //               data.toString()) // Assuming the API returns a list of strings
+  //           .toList();
 
-        setState(() {
-          brands = fetchedBrands;
-        });
-      } else {
-        // Handle the error; maybe show a message to the user
-      }
-    } catch (e) {
-      // Handle any exceptions; maybe show an error message
-    }
-  }
+  //       setState(() {
+  //         brands = fetchedBrands;
+  //       });
+  //     } else {
+  //       // Handle the error; maybe show a message to the user
+  //     }
+  //   } catch (e) {
+  //     // Handle any exceptions; maybe show an error message
+  //   }
+  // }
 
   Future<void> _fetchFramesData() async {
     try {
@@ -144,6 +145,25 @@ class _BillScreenState extends State<BillScreen> {
 
         setState(() {
           frames = fetchedFrames;
+        });
+      } else {
+        // Handle the error; maybe show a message to the user
+      }
+    } catch (e) {
+      // Handle any exceptions; maybe show an error message
+    }
+  }
+///dropdown/brands-by-frame
+///filter by frames which we selected
+   Future<void> _fetchBrandsByFrame(String frame) async {
+    try {
+      final response = await http.get(Uri.parse('http://localhost:8001/dropdown/brands-by-frame?frame=$frame'));
+
+      if (response.statusCode == 200) {
+        List<String> fetchedBrands = List<String>.from(json.decode(response.body));
+        
+        setState(() {
+          brands = fetchedBrands;
         });
       } else {
         // Handle the error; maybe show a message to the user
@@ -173,6 +193,17 @@ class _BillScreenState extends State<BillScreen> {
       // Handle any exceptions; maybe show an error message
     }
   }
+
+  // Future<List<String>> fetchBrandsByFrame(String frame) async {
+  //   var url = Uri.parse('http://localhost:8001/brands-by-frame?frame=$frame');
+  //   var response = await http.get(url);
+
+  //   if (response.statusCode == 200) {
+  //     return List<String>.from(json.decode(response.body));
+  //   } else {
+  //     throw Exception('Failed to load brands');
+  //   }
+  // }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -220,35 +251,38 @@ class _BillScreenState extends State<BillScreen> {
     );
   }
 
-  Widget _buildDropdownField(String label, List<String> items) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
-      child: DropdownButtonFormField(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(3.0),
-            borderSide: BorderSide(),
-          ),
-          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-          isDense: true, // Use this to match the TextField's height
+Widget _buildDropdownField(String label, List<String> items, {Function(String)? onSelected}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 1),
+    child: DropdownButtonFormField<String>(
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(3.0),
+          borderSide: BorderSide(),
         ),
-        items: items.map<DropdownMenuItem<String>>((String value) {
-          return DropdownMenuItem<String>(
-            value: value,
-            child: Text(
-              value,
-              style: TextStyle(fontSize: 10), // Smaller font size for items
-            ),
-          );
-        }).toList(),
-        onChanged: (String? newValue) {},
-        style: TextStyle(fontSize: 10), // Smaller font size
-        // Match the height of the TextField
-        isExpanded: true, // Expand the dropdown to fill the space
+        contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+        isDense: true,
       ),
-    );
-  }
+      items: items.map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(
+            value,
+            style: TextStyle(fontSize: 10),
+          ),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {
+        if (onSelected != null && newValue != null) {
+          onSelected(newValue);
+        }
+      },
+      style: TextStyle(fontSize: 10),
+      isExpanded: true,
+    ),
+  );
+}
 
   Widget _buildMainContent() {
     return SingleChildScrollView(
@@ -330,17 +364,22 @@ class _BillScreenState extends State<BillScreen> {
     ]);
   }
 
-  Widget _buildFrameDetailsSection() {
-    return _buildDetailsCard('Frame Details', [
-      _buildDropdownField('Frame', frames),
-      _buildDropdownField('Brand', brands),
-      _buildDropdownField('Size', sizes),
-      _buildTextField('Quntity'),
-      _buildDropdownField('Model', models),
-      _buildDropdownField('Color', colors),
-      _buildTextField('Price'),
-    ]);
-  }
+
+
+Widget _buildFrameDetailsSection() {
+  return _buildDetailsCard('Frame Details', [
+    _buildDropdownField('Frame', frames, onSelected: (selectedFrame) {
+      _fetchBrandsByFrame(selectedFrame);
+    }),
+    _buildDropdownField('Brand', brands), // Rest of the dropdowns remain the same
+    _buildDropdownField('Size', sizes),
+    _buildTextField('Quantity'),
+    _buildDropdownField('Model', models),
+    _buildDropdownField('Color', colors),
+    _buildTextField('Price'),
+  ]);
+}
+
 
   Widget _buildInvoiceAndDeliveryDetailsSection() {
     return _buildDetailsCard('Invoice & Delivery Details', [
