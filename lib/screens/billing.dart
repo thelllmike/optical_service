@@ -47,9 +47,11 @@ class _BillScreenState extends State<BillScreen> {
   List<String> colors = [];
 
  String? selectedFrame;
-String? selectedBrand;
-String? selectedSize;
-  String? Value; // Initially null
+  String? selectedBrand;
+  String? selectedSize;
+  String? selectedColor; // Define a state variable for the selected color
+  String? selectedModel; 
+  // String? Value; // Initially null
 
   Map<String, TextEditingController> _controllers = {};
   DateTime _selectedDate = DateTime.now();
@@ -68,52 +70,29 @@ String? selectedSize;
   void initState() {
     super.initState();
     _fetchFramesData();
-    _fetchColorsData();
-    _fetchModelsData();
     
   }
+///dropdown/models-by-selection
+Future<void> _fetchModelsBySelection(String frame, String brand, String size, String color) async {
+  try {
+    final response = await http.get(
+      Uri.parse('http://localhost:8001/dropdown/models-by-selection?frame=$frame&brand=$brand&size=$size&color=$color'),
+    );
 
-  Future<void> _fetchModelsData() async {
-    try {
-      final response =
-          await http.get(Uri.parse('http://localhost:8001/dropdown/onlymodel'));
-      if (response.statusCode == 200) {
-        List<String> fetchedModels = (json.decode(response.body) as List)
-            .map((data) =>
-                data.toString()) // Assuming the API returns a list of strings
-            .toList();
-
-        setState(() {
-          models = fetchedModels;
-        });
-      } else {
-        // Handle the error; maybe show a message to the user
-      }
-    } catch (e) {
-      // Handle any exceptions; maybe show an error message
+    if (response.statusCode == 200) {
+      List<String> fetchedModels = List<String>.from(json.decode(response.body));
+      
+      setState(() {
+        models = fetchedModels;
+      });
+    } else {
+      // Handle the error; maybe show a message to the user
     }
+  } catch (e) {
+    // Handle any exceptions; maybe show an error message
   }
+}
 
-  Future<void> _fetchColorsData() async {
-    try {
-      final response =
-          await http.get(Uri.parse('http://localhost:8001/dropdown/onlycolor'));
-      if (response.statusCode == 200) {
-        List<String> fetchedcolors = (json.decode(response.body) as List)
-            .map((data) =>
-                data.toString()) // Assuming the API returns a list of strings
-            .toList();
-
-        setState(() {
-          colors = fetchedcolors;
-        });
-      } else {
-        // Handle the error; maybe show a message to the user
-      }
-    } catch (e) {
-      // Handle any exceptions; maybe show an error message
-    }
-  }
 
 
 
@@ -178,7 +157,26 @@ String? selectedSize;
   }
 }
 
+///dropdown/colors-by-frame-brand-size
+Future<void> _fetchColorsByFrameBrandSize(String frame, String brand, String size) async {
+  try {
+    final response = await http.get(
+      Uri.parse('http://localhost:8001/dropdown/colors-by-frame-brand-size?frame=$frame&brand=$brand&size=$size'),
+    );
 
+    if (response.statusCode == 200) {
+      List<String> fetchedColors = List<String>.from(json.decode(response.body));
+      
+      setState(() {
+        colors = fetchedColors;
+      });
+    } else {
+      // Handle the error; maybe show a message to the user
+    }
+  } catch (e) {
+    // Handle any exceptions; maybe show an error message
+  }
+}
 
 
 
@@ -342,61 +340,105 @@ Widget _buildDropdownField(String label, List<String> items, {String? value, req
       _buildDropdownField('Gender', ['Male', 'Female', 'Other'], onSelected: (String ) {  }),
     ]);
   }
-
-
 Widget _buildFrameDetailsSection() {
   return _buildDetailsCard('Frame Details', [
+    // Frame Dropdown
     _buildDropdownField(
       'Frame',
       frames,
-      value: selectedFrame, // Use the selectedFrame as the value
+      value: selectedFrame,
       onSelected: (newValue) {
-        if (newValue != selectedFrame) {
-          setState(() {
-            selectedFrame = newValue;
-            selectedBrand = null; // Reset brand when frame changes
-            selectedSize = null; // Reset size when frame changes
-            brands = []; // Clear previous brands
-            sizes = []; // Clear previous sizes
-          });
-          _fetchBrandsByFrame(newValue);
-        }
+        setState(() {
+          selectedFrame = newValue;
+          selectedBrand = null; // Reset brand when frame changes
+          selectedSize = null; // Reset size when frame changes
+          selectedColor = null; // Reset color when frame changes
+          selectedModel = null; // Reset model when frame changes
+          brands = []; // Clear previous brands
+          sizes = []; // Clear previous sizes
+          colors = []; // Clear previous colors
+          models = []; // Clear previous models
+        });
+        _fetchBrandsByFrame(newValue);
       },
     ),
+
+    // Brand Dropdown
     _buildDropdownField(
       'Brand',
       brands,
-      value: selectedBrand, // Use the selectedBrand as the value
+      value: selectedBrand,
       onSelected: (newValue) {
-        if (newValue != selectedBrand) {
-          setState(() {
-            selectedBrand = newValue;
-            selectedSize = null; // Reset size when brand changes
-            sizes = []; // Clear previous sizes
-          });
-          if (selectedFrame != null) {
-            _fetchSizesByFrameAndBrand(selectedFrame!, newValue);
-          }
+        setState(() {
+          selectedBrand = newValue;
+          selectedSize = null; // Reset size when brand changes
+          selectedColor = null; // Reset color when brand changes
+          selectedModel = null; // Reset model when brand changes
+          sizes = []; // Clear previous sizes
+          colors = []; // Clear previous colors
+          models = []; // Clear previous models
+        });
+        if (selectedFrame != null) {
+          _fetchSizesByFrameAndBrand(selectedFrame!, newValue);
         }
       },
     ),
+
+    // Size Dropdown
     _buildDropdownField(
       'Size',
       sizes,
-      value: selectedSize, // Use the selectedSize as the value
+      value: selectedSize,
       onSelected: (newValue) {
         setState(() {
           selectedSize = newValue;
+          selectedColor = null; // Reset color when size changes
+          selectedModel = null; // Reset model when size changes
+          colors = []; // Clear previous colors
+          models = []; // Clear previous models
+        });
+        if (selectedFrame != null && selectedBrand != null) {
+          _fetchColorsByFrameBrandSize(selectedFrame!, selectedBrand!, newValue);
+        }
+      },
+    ),
+
+    // Color Dropdown
+    _buildDropdownField(
+      'Color',
+      colors,
+      value: selectedColor,
+      onSelected: (newValue) {
+        setState(() {
+          selectedColor = newValue;
+          selectedModel = null; // Reset model when color changes
+          models = []; // Clear previous models
+        });
+        if (selectedFrame != null && selectedBrand != null && selectedSize != null) {
+          _fetchModelsBySelection(selectedFrame!, selectedBrand!, selectedSize!, newValue);
+        }
+      },
+    ),
+
+    // Model Dropdown
+    _buildDropdownField(
+      'Model',
+      models,
+      value: selectedModel,
+      onSelected: (newValue) {
+        setState(() {
+          selectedModel = newValue;
         });
       },
     ),
+
+    // Other fields like Quantity, Price etc.
     _buildTextField('Quantity'),
-    _buildDropdownField('Model', models, onSelected: (String ) {  }),
-    _buildDropdownField('Color', colors, onSelected: (String ) {  }),
     _buildTextField('Price'),
+
+    // ... add any other fields as needed ...
   ]);
 }
-
 
   Widget _buildInvoiceAndDeliveryDetailsSection() {
     return _buildDetailsCard('Invoice & Delivery Details', [
