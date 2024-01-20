@@ -46,6 +46,11 @@ class _BillScreenState extends State<BillScreen> {
   List<String> models = [];
   List<String> colors = [];
 
+ String? selectedFrame;
+String? selectedBrand;
+String? selectedSize;
+  String? Value; // Initially null
+
   Map<String, TextEditingController> _controllers = {};
   DateTime _selectedDate = DateTime.now();
   List<Item> items = [
@@ -63,8 +68,6 @@ class _BillScreenState extends State<BillScreen> {
   void initState() {
     super.initState();
     _fetchFramesData();
-    _fetchSizesData();
-    // _fetchBrandsData();
     _fetchColorsData();
     _fetchModelsData();
     
@@ -112,26 +115,7 @@ class _BillScreenState extends State<BillScreen> {
     }
   }
 
-  // Future<void> _fetchBrandsData() async {
-  //   try {
-  //     final response =
-  //         await http.get(Uri.parse('http://localhost:8001/dropdown/onlybrand'));
-  //     if (response.statusCode == 200) {
-  //       List<String> fetchedBrands = (json.decode(response.body) as List)
-  //           .map((data) =>
-  //               data.toString()) // Assuming the API returns a list of strings
-  //           .toList();
 
-  //       setState(() {
-  //         brands = fetchedBrands;
-  //       });
-  //     } else {
-  //       // Handle the error; maybe show a message to the user
-  //     }
-  //   } catch (e) {
-  //     // Handle any exceptions; maybe show an error message
-  //   }
-  // }
 
   Future<void> _fetchFramesData() async {
     try {
@@ -172,38 +156,32 @@ class _BillScreenState extends State<BillScreen> {
       // Handle any exceptions; maybe show an error message
     }
   }
+//filtered bybrand and frame and get details
+///dropdown/sizes-by-frame-and-brand
+  Future<void> _fetchSizesByFrameAndBrand(String frame, String brand) async {
+  try {
+    final response = await http.get(
+      Uri.parse('http://localhost:8001/dropdown/sizes-by-frame-and-brand?frame=$frame&brand=$brand'),
+    );
 
-  Future<void> _fetchSizesData() async {
-    try {
-      final response =
-          await http.get(Uri.parse('http://localhost:8001/dropdown/onlysize'));
-      if (response.statusCode == 200) {
-        List<String> fetchedSizes = (json.decode(response.body) as List)
-            .map((data) =>
-                data.toString()) // Assuming the API returns a list of strings
-            .toList();
-
-        setState(() {
-          sizes = fetchedSizes;
-        });
-      } else {
-        // Handle the error; maybe show a message to the user
-      }
-    } catch (e) {
-      // Handle any exceptions; maybe show an error message
+    if (response.statusCode == 200) {
+      List<String> fetchedSizes = List<String>.from(json.decode(response.body));
+      
+      setState(() {
+        sizes = fetchedSizes;
+      });
+    } else {
+      // Handle the error; maybe show a message to the user
     }
+  } catch (e) {
+    // Handle any exceptions; maybe show an error message
   }
+}
 
-  // Future<List<String>> fetchBrandsByFrame(String frame) async {
-  //   var url = Uri.parse('http://localhost:8001/brands-by-frame?frame=$frame');
-  //   var response = await http.get(url);
 
-  //   if (response.statusCode == 200) {
-  //     return List<String>.from(json.decode(response.body));
-  //   } else {
-  //     throw Exception('Failed to load brands');
-  //   }
-  // }
+
+
+
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -251,7 +229,7 @@ class _BillScreenState extends State<BillScreen> {
     );
   }
 
-Widget _buildDropdownField(String label, List<String> items, {Function(String)? onSelected}) {
+Widget _buildDropdownField(String label, List<String> items, {String? value, required Function(String) onSelected}) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 1),
     child: DropdownButtonFormField<String>(
@@ -264,6 +242,7 @@ Widget _buildDropdownField(String label, List<String> items, {Function(String)? 
         contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
         isDense: true,
       ),
+      value: value, // Set the current value for the dropdown
       items: items.map<DropdownMenuItem<String>>((String value) {
         return DropdownMenuItem<String>(
           value: value,
@@ -273,8 +252,8 @@ Widget _buildDropdownField(String label, List<String> items, {Function(String)? 
           ),
         );
       }).toList(),
-      onChanged: (String? newValue) {
-        if (onSelected != null && newValue != null) {
+      onChanged: (newValue) {
+        if (newValue != null) {
           onSelected(newValue);
         }
       },
@@ -360,22 +339,60 @@ Widget _buildDropdownField(String label, List<String> items, {Function(String)? 
       _buildTextField('Full Name'),
       _buildTextField('NIC Number'),
       _buildTextField('Address', maxLines: 3),
-      _buildDropdownField('Gender', ['Male', 'Female', 'Other']),
+      _buildDropdownField('Gender', ['Male', 'Female', 'Other'], onSelected: (String ) {  }),
     ]);
   }
 
 
-
 Widget _buildFrameDetailsSection() {
   return _buildDetailsCard('Frame Details', [
-    _buildDropdownField('Frame', frames, onSelected: (selectedFrame) {
-      _fetchBrandsByFrame(selectedFrame);
-    }),
-    _buildDropdownField('Brand', brands), // Rest of the dropdowns remain the same
-    _buildDropdownField('Size', sizes),
+    _buildDropdownField(
+      'Frame',
+      frames,
+      value: selectedFrame, // Use the selectedFrame as the value
+      onSelected: (newValue) {
+        if (newValue != selectedFrame) {
+          setState(() {
+            selectedFrame = newValue;
+            selectedBrand = null; // Reset brand when frame changes
+            selectedSize = null; // Reset size when frame changes
+            brands = []; // Clear previous brands
+            sizes = []; // Clear previous sizes
+          });
+          _fetchBrandsByFrame(newValue);
+        }
+      },
+    ),
+    _buildDropdownField(
+      'Brand',
+      brands,
+      value: selectedBrand, // Use the selectedBrand as the value
+      onSelected: (newValue) {
+        if (newValue != selectedBrand) {
+          setState(() {
+            selectedBrand = newValue;
+            selectedSize = null; // Reset size when brand changes
+            sizes = []; // Clear previous sizes
+          });
+          if (selectedFrame != null) {
+            _fetchSizesByFrameAndBrand(selectedFrame!, newValue);
+          }
+        }
+      },
+    ),
+    _buildDropdownField(
+      'Size',
+      sizes,
+      value: selectedSize, // Use the selectedSize as the value
+      onSelected: (newValue) {
+        setState(() {
+          selectedSize = newValue;
+        });
+      },
+    ),
     _buildTextField('Quantity'),
-    _buildDropdownField('Model', models),
-    _buildDropdownField('Color', colors),
+    _buildDropdownField('Model', models, onSelected: (String ) {  }),
+    _buildDropdownField('Color', colors, onSelected: (String ) {  }),
     _buildTextField('Price'),
   ]);
 }
@@ -385,15 +402,15 @@ Widget _buildFrameDetailsSection() {
     return _buildDetailsCard('Invoice & Delivery Details', [
       _buildDatePickerField('Invoice Date'),
       _buildDatePickerField('Delivery Date'),
-      _buildDropdownField('Sales Person', ['Person1', 'Person2']),
+      _buildDropdownField('Sales Person', ['Person1', 'Person2'], onSelected: (String ) {  }),
     ]);
   }
 
   Widget _buildLensDetailsSection() {
     return _buildDetailsCard('Lens Details', [
-      _buildDropdownField('Lens Category', ['Category1', 'Category2']),
-      _buildDropdownField('Coating', ['Coating1', 'Coating1']),
-      _buildDropdownField('Power', ['-1', '+2']),
+      _buildDropdownField('Lens Category', ['Category1', 'Category2'], onSelected: (String ) {  }),
+      _buildDropdownField('Coating', ['Coating1', 'Coating1'], onSelected: (String ) {  }),
+      _buildDropdownField('Power', ['-1', '+2'], onSelected: (String ) {  }),
       _buildTextField('Quntity'),
       _buildTextField('Price'),
     ]);
@@ -468,7 +485,7 @@ Widget _buildFrameDetailsSection() {
       _buildTextField('Grand Total'),
       _buildTextField('Advance Paid'),
       _buildTextField('Balance Amount'),
-      _buildDropdownField('Pay Type', ['Cash', 'Card']),
+      _buildDropdownField('Pay Type', ['Cash', 'Card'], onSelected: (String ) {  }),
     ]);
   }
 

@@ -220,8 +220,9 @@ Future<void> fetchData() async {
       };
     } else if (widget.endpoint == 'add_frame') {
       productData = {
-        "brand": controllers[0].text,
-        "frame": controllers[1].text,
+        //brand
+        "frame": controllers[0].text,
+        "brand": controllers[1].text,
         "size": controllers[2].text,
         "stock": controllers[3].text,
         "model": controllers[4].text,
