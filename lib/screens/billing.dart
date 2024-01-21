@@ -10,12 +10,13 @@ class Item {
   int quantity;
   double unitPrice;
 
+
   Item(
       {required this.description,
       required this.quantity,
       required this.unitPrice});
 
-  double get totalAmount => quantity * unitPrice;
+   double get totalAmount => quantity * unitPrice;
 }
 
 class MyApp extends StatelessWidget {
@@ -45,6 +46,9 @@ class _BillScreenState extends State<BillScreen> {
   List<String> sizes = [];
   List<String> models = [];
   List<String> colors = [];
+
+  double totalPrice = 0.0; // Total price
+  double selectedPrice = 0.0; // Unit price of the selected model
 
  String? selectedFrame;
   String? selectedBrand;
@@ -175,6 +179,36 @@ Future<void> _fetchColorsByFrameBrandSize(String frame, String brand, String siz
     }
   } catch (e) {
     // Handle any exceptions; maybe show an error message
+  }
+}
+
+///dropdown/price-by-selection
+// Future<String> fetchPriceBySelection(String frame, String brand, String size, String color, String model) async {
+//   final url = Uri.parse('http://localhost:8001/dropdown/price-by-selection?frame=$frame&brand=$brand&size=$size&color=$color&model=$model');
+//   var response = await http.get(url);
+
+//   if (response.statusCode == 200) {
+//     var jsonResponse = jsonDecode(response.body);
+//     return jsonResponse['price'];
+//   } else {
+//     // Handle the error; maybe show a message to the user
+//     return "Error fetching price";
+//   }
+// }
+
+Future<String> fetchPriceBySelection(String frame, String brand, String size, String color, String model) async {
+  final url = Uri.parse('http://localhost:8001/dropdown/price-by-selection?frame=$frame&brand=$brand&size=$size&color=$color&model=$model');
+  var response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    var jsonResponse = jsonDecode(response.body);
+    String priceString = jsonResponse['price'].toString();
+    print("Price received: $priceString"); // Print the received price
+    return priceString;
+  } else {
+    // Handle the error; maybe show a message to the user
+    print("Error fetching price");
+    return "Error fetching price";
   }
 }
 
@@ -340,6 +374,53 @@ Widget _buildDropdownField(String label, List<String> items, {String? value, req
       _buildDropdownField('Gender', ['Male', 'Female', 'Other'], onSelected: (String ) {  }),
     ]);
   }
+
+Widget _buildReadOnlyTextField(String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 2),
+    child: TextField(
+      controller: TextEditingController(text: value),
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+        isDense: true,
+      ),
+      readOnly: true, // Make this field read-only
+    ),
+  );
+}
+
+Widget _buildQuantityField(String label, {int maxLines = 1}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 2),
+    child: TextField(
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
+        isDense: true,
+      ),
+      maxLines: maxLines,
+      onChanged: (quantity) {
+        int qty = 1;
+        if (quantity.isNotEmpty) {
+          try {
+            qty = int.parse(quantity);
+          } catch (e) {
+            // Handle error for invalid input (e.g., non-numeric input)
+          }
+        }
+        setState(() {
+          totalPrice = qty * selectedPrice; // Calculate and update total price
+        });
+      },
+      style: TextStyle(fontSize: 14),
+    ),
+  );
+}
+
+
 Widget _buildFrameDetailsSection() {
   return _buildDetailsCard('Frame Details', [
     // Frame Dropdown
@@ -420,21 +501,31 @@ Widget _buildFrameDetailsSection() {
       },
     ),
 
-    // Model Dropdown
-    _buildDropdownField(
-      'Model',
-      models,
-      value: selectedModel,
-      onSelected: (newValue) {
-        setState(() {
-          selectedModel = newValue;
-        });
-      },
-    ),
+ // Model Dropdown
+_buildDropdownField(
+  'Model',
+  models,
+  value: selectedModel,
+  onSelected: (newValue) async {
+    setState(() {
+      selectedModel = newValue;
+    });
+    // Fetch and set price for the selected model
+    if (selectedFrame != null && selectedBrand != null && selectedSize != null && selectedColor != null) {
+      String priceString = await fetchPriceBySelection(selectedFrame!, selectedBrand!, selectedSize!, selectedColor!, newValue);
+      setState(() {
+        selectedPrice = double.tryParse(priceString) ?? 0.0;
+      });
+    }
+  },
+),
 
-    // Other fields like Quantity, Price etc.
-    _buildTextField('Quantity'),
-    _buildTextField('Price'),
+
+     _buildQuantityField('Quantity'),
+
+   
+    // Price TextField (read-only, displaying calculated price)
+     _buildReadOnlyTextField('Total Price', totalPrice.toStringAsFixed(2)),
 
     // ... add any other fields as needed ...
   ]);
