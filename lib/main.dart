@@ -23,8 +23,10 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         // Add other dark theme properties if needed
       ),
-      themeMode: ThemeMode.dark, // Set theme mode to dark
-      home:  Homescreen(), // Ensure you have a constructor marked as const in BillScreen
+      themeMode: ThemeMode.dark,
+      //Homescreen // Set theme mode to dark
+      home:  RegisterScreen(),
+      //RegisterScreen // Ensure you have a constructor marked as const in BillScreen
       debugShowCheckedModeBanner: false,
     );
   }

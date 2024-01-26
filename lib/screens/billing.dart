@@ -182,19 +182,7 @@ Future<void> _fetchColorsByFrameBrandSize(String frame, String brand, String siz
   }
 }
 
-///dropdown/price-by-selection
-// Future<String> fetchPriceBySelection(String frame, String brand, String size, String color, String model) async {
-//   final url = Uri.parse('http://localhost:8001/dropdown/price-by-selection?frame=$frame&brand=$brand&size=$size&color=$color&model=$model');
-//   var response = await http.get(url);
 
-//   if (response.statusCode == 200) {
-//     var jsonResponse = jsonDecode(response.body);
-//     return jsonResponse['price'];
-//   } else {
-//     // Handle the error; maybe show a message to the user
-//     return "Error fetching price";
-//   }
-// }
 
 Future<String> fetchPriceBySelection(String frame, String brand, String size, String color, String model) async {
   final url = Uri.parse('http://localhost:8001/dropdown/price-by-selection?frame=$frame&brand=$brand&size=$size&color=$color&model=$model');
