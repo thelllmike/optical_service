@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';  // For JSON encoding/decoding
+import 'dart:convert';
+
+import 'package:optical_desktop/screens/login.dart';  // For JSON encoding/decoding
 
 
 
@@ -109,18 +111,24 @@ Future<int> registerBranch(int shopId) async {
 }
 
 
- Future<void> completeRegistrationProcess() async {
+Future<void> completeRegistrationProcess() async {
   try {
-    // First, register the optical shop and get its ID
     final int shopId = await registerOpticalShop();
-
-    // Then, register the branch with the obtained shop ID
     final int branchId = await registerBranch(shopId);
-
-    // Finally, register the user with the obtained branch ID
     await registerUser(branchId);
 
-    Fluttertoast.showToast(msg: 'Complete registration successful');
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Registration successful')),
+    );
+
+    // Navigate to the LoginScreen after a short delay
+    Future.delayed(Duration(seconds: 2), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+    });
   } catch (e) {
     Fluttertoast.showToast(msg: 'Registration failed: ${e.toString()}');
     print(e.toString());
@@ -128,19 +136,48 @@ Future<int> registerBranch(int shopId) async {
 }
 
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      if (passwordController.text == confirmPasswordController.text) {
-        completeRegistrationProcess();
-      } else {
-        Fluttertoast.showToast(msg: 'Passwords do not match');
-      }
+//  Future<void> completeRegistrationProcess() async {
+//   try {
+//     // First, register the optical shop and get its ID
+//     final int shopId = await registerOpticalShop();
+
+//     // Then, register the branch with the obtained shop ID
+//     final int branchId = await registerBranch(shopId);
+
+//     // Finally, register the user with the obtained branch ID
+//     await registerUser(branchId);
+
+//     Fluttertoast.showToast(msg: 'Complete registration successful');
+//   } catch (e) {
+//     Fluttertoast.showToast(msg: 'Registration failed: ${e.toString()}');
+//     print(e.toString());
+//   }
+// }
+
+
+void _submitForm() {
+  if (_formKey.currentState!.validate()) {
+    if (passwordController.text == confirmPasswordController.text) {
+      completeRegistrationProcess();
+    } else {
+      Fluttertoast.showToast(
+        msg: "Passwords do not match",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+      );
     }
+  } else {
+    Fluttertoast.showToast(
+      msg: "Please enter valid data",
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.CENTER,
+    );
   }
+}
 
 
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -195,7 +232,6 @@ Future<int> registerBranch(int shopId) async {
                       if (value == null || value.isEmpty) {
                         return 'Please enter email';
                       }
-                      // Add more sophisticated email validation if needed
                       return null;
                     },
                   ),
@@ -240,7 +276,19 @@ Future<int> registerBranch(int shopId) async {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter password';
+                        return 'Please enter a password';
+                      }
+                      if (value.length < 8) {
+                        return 'Password must be at least 8 characters';
+                      }
+                      if (!RegExp(r'\d').hasMatch(value)) {
+                        return 'Password must include at least one number';
+                      }
+                      if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                        return 'Password must include at least one uppercase letter';
+                      }
+                      if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
+                        return 'Password must include at least one special character';
                       }
                       return null;
                     },
@@ -255,7 +303,10 @@ Future<int> registerBranch(int shopId) async {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please confirm password';
+                        return 'Please confirm the password';
+                      }
+                      if (value != passwordController.text) {
+                        return 'Passwords do not match';
                       }
                       return null;
                     },
