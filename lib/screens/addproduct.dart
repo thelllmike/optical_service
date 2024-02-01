@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart'; // Ensure this import is correct
-
+import 'package:optical_desktop/global.dart'as globals; 
 // Replace with your actual API base URL
-const String baseUrl = "http://localhost:8001";
+const String baseUrl = "http://localhost:8001/product";
 
 Future<http.Response> addProduct(
     String endpoint, Map<String, dynamic> productData) {
+    productData['branch_id'] = globals.branch_id;
   return http.post(
     Uri.parse('$baseUrl/$endpoint'),
     headers: <String, String>{
@@ -170,34 +171,68 @@ class _ProductFormSectionState extends State<ProductFormSection> {
     }
   }
 
-Future<void> fetchData() async {
-  String fetchEndpoint = widget.endpoint == 'add_lens' ? 'lenses' : 'frames';
-  try {
-    var response = await http.get(Uri.parse('$baseUrl/$fetchEndpoint'));
-    if (response.statusCode == 200) {
-      List<dynamic> dataList = jsonDecode(response.body);
-      setState(() {
-        tableData = dataList.map((item) {
-          List<String> row = [];
-          // Assuming 'id' is the key for the ID in your data
-          // Make sure this key matches the key used in your backend
-          row.add(item['id'].toString()); 
-          // Iterate over the table headers and fill in row data
-          widget.tableHeaders.forEach((header) {
-            String key = convertToKey(header);
-            var value = item[key];
-            row.add(value != null ? value.toString() : 'N/A');
-          });
-          return row;
-        }).toList();
-      });
-    } else {
-      print('Failed to load data: ${response.body}');
+
+ Future<void> fetchData() async {
+    String fetchEndpoint = widget.endpoint == 'add_lens' ? 'lenses' : 'frames';
+    try {
+      var response = await http.get(
+        Uri.parse('$baseUrl/$fetchEndpoint?branch_id=${globals.branch_id}'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+      if (response.statusCode == 200) {
+        List<dynamic> dataList = jsonDecode(response.body);
+        setState(() {
+          tableData = dataList.map((item) {
+            List<String> row = [];
+            row.add(item['id'].toString()); 
+            widget.tableHeaders.forEach((header) {
+              String key = convertToKey(header);
+              var value = item[key];
+              row.add(value != null ? value.toString() : 'N/A');
+            });
+            return row;
+          }).toList();
+        });
+      } else {
+        print('Failed to load data: ${response.body}');
+      }
+    } catch (e) {
+      print('Network Error: $e');
     }
-  } catch (e) {
-    print('Network Error: $e');
   }
-}
+
+
+
+// Future<void> fetchData() async {
+//   String fetchEndpoint = widget.endpoint == 'add_lens' ? 'lenses' : 'frames';
+//   try {
+//     var response = await http.get(Uri.parse('$baseUrl/$fetchEndpoint'));
+//     if (response.statusCode == 200) {
+//       List<dynamic> dataList = jsonDecode(response.body);
+//       setState(() {
+//         tableData = dataList.map((item) {
+//           List<String> row = [];
+//           // Assuming 'id' is the key for the ID in your data
+//           // Make sure this key matches the key used in your backend
+//           row.add(item['id'].toString()); 
+//           // Iterate over the table headers and fill in row data
+//           widget.tableHeaders.forEach((header) {
+//             String key = convertToKey(header);
+//             var value = item[key];
+//             row.add(value != null ? value.toString() : 'N/A');
+//           });
+//           return row;
+//         }).toList();
+//       });
+//     } else {
+//       print('Failed to load data: ${response.body}');
+//     }
+//   } catch (e) {
+//     print('Network Error: $e');
+//   }
+// }
 
 
   String convertToKey(String header) {
@@ -213,10 +248,11 @@ Future<void> fetchData() async {
       productData = {
         "category": controllers[0].text,
         "coating": controllers[1].text,
-        "power": controllers[1].text,
-        "stock": controllers[2].text,
-        "selling_price": controllers[3].text,
-        "cost": controllers[4].text,
+        "power": controllers[2].text,
+        "stock": controllers[3].text,
+        "selling_price": controllers[4].text,
+        "cost": controllers[5].text,
+        'branch_id': globals.branch_id,
       };
     } else if (widget.endpoint == 'add_frame') {
       productData = {
@@ -229,6 +265,7 @@ Future<void> fetchData() async {
         "color": controllers[5].text,
         "selling_price": controllers[6].text,
         "wholesale_price": controllers[7].text,
+        'branch_id': globals.branch_id,
       };
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

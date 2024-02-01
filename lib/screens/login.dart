@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:optical_desktop/screens/home.dart';
 import 'package:optical_desktop/screens/register.dart';
+import 'package:optical_desktop/global.dart' as globals;
 import 'package:http/http.dart' as http;
 
 
@@ -32,31 +33,38 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
-      // Make the HTTP request for login
-      final response = await http.post(
-        Uri.parse('http://localhost:8001/register/login'), // Update with your API endpoint
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'email': _emailController.text,
-          'password': _passwordController.text,
-        }),
-      );
+Future<void> _login() async {
+  if (_formKey.currentState!.validate()) {
+    final response = await http.post(
+      Uri.parse('http://localhost:8001/register/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'email': _emailController.text,
+        'password': _passwordController.text,
+      }),
+    );
 
-      if (response.statusCode == 200) {
-        // Navigate to HomeScreen on successful login
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => Homescreen()),
-        );
-      } else {
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed')),
-        );
-      }
+   if (response.statusCode == 200) {
+  final responseData = json.decode(response.body);
+  
+  if (responseData.containsKey('branchId') && responseData['branchId'] != null) {
+    globals.branch_id = responseData['branchId'];  // Directly assign integer value
+  } else {
+    print("Error: Branch ID not found in response");
+    return;
+  }
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => Homescreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed')),
+      );
     }
   }
+}
+
 
   void _navigateToRegister() {
     Navigator.of(context).push(

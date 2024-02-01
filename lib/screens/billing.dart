@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart';
-
+import 'package:optical_desktop/global.dart' as globals;
 final ValueNotifier<ThemeData> _themeNotifier = ValueNotifier(ThemeData.dark());
 
 class Item {
@@ -77,11 +77,39 @@ class _BillScreenState extends State<BillScreen> {
     
   }
 ///dropdown/models-by-selection
+// Future<void> _fetchModelsBySelection(String frame, String brand, String size, String color) async {
+//   try {
+//     final response = await http.get(
+//       Uri.parse('http://localhost:8001/dropdown/models-by-selection?frame=$frame&brand=$brand&size=$size&color=$color'),
+//     );
+
+//     if (response.statusCode == 200) {
+//       List<String> fetchedModels = List<String>.from(json.decode(response.body));
+      
+//       setState(() {
+//         models = fetchedModels;
+//       });
+//     } else {
+//       // Handle the error; maybe show a message to the user
+//     }
+//   } catch (e) {
+//     // Handle any exceptions; maybe show an error message
+//   }
+// }
+
 Future<void> _fetchModelsBySelection(String frame, String brand, String size, String color) async {
   try {
-    final response = await http.get(
-      Uri.parse('http://localhost:8001/dropdown/models-by-selection?frame=$frame&brand=$brand&size=$size&color=$color'),
-    );
+    // Construct the URL with the branch_id query parameter
+    final queryParameters = {
+      'frame': frame,
+      'brand': brand,
+      'size': size,
+      'color': color,
+      'branch_id': globals.branch_id.toString(), // Converting int to String to be used in URL
+    };
+    final uri = Uri.http('localhost:8001', '/dropdown/models-by-selection', queryParameters);
+
+    final response = await http.get(uri);
 
     if (response.statusCode == 200) {
       List<String> fetchedModels = List<String>.from(json.decode(response.body));
@@ -91,61 +119,127 @@ Future<void> _fetchModelsBySelection(String frame, String brand, String size, St
       });
     } else {
       // Handle the error; maybe show a message to the user
+      print('Error fetching models: ${response.body}');
     }
   } catch (e) {
     // Handle any exceptions; maybe show an error message
+    print('Network Error: $e');
   }
 }
 
 
 
 
-  Future<void> _fetchFramesData() async {
-    try {
-      final response =
-          await http.get(Uri.parse('http://localhost:8001/dropdown/onlyframe'));
-      if (response.statusCode == 200) {
-        List<String> fetchedFrames = (json.decode(response.body) as List)
-            .map((data) =>
-                data.toString()) // Assuming the API returns a list of strings
-            .toList();
+  // Future<void> _fetchFramesData() async {
+  //   try {
+  //     final response =
+  //         await http.get(Uri.parse('http://localhost:8001/dropdown/onlyframe'));
+  //     if (response.statusCode == 200) {
+  //       List<String> fetchedFrames = (json.decode(response.body) as List)
+  //           .map((data) =>
+  //               data.toString()) // Assuming the API returns a list of strings
+  //           .toList();
 
-        setState(() {
-          frames = fetchedFrames;
-        });
-      } else {
-        // Handle the error; maybe show a message to the user
-      }
-    } catch (e) {
-      // Handle any exceptions; maybe show an error message
+  //       setState(() {
+  //         frames = fetchedFrames;
+  //       });
+  //     } else {
+  //       // Handle the error; maybe show a message to the user
+  //     }
+  //   } catch (e) {
+  //     // Handle any exceptions; maybe show an error message
+  //   }
+  // }
+
+
+Future<void> _fetchFramesData() async {
+  try {
+    // Construct the URL with the branch_id query parameter
+    final url = Uri.parse('http://localhost:8001/dropdown/onlyframe')
+        .replace(queryParameters: {'branch_id': globals.branch_id.toString()});
+    
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      List<String> fetchedFrames = (json.decode(response.body) as List)
+          .map((data) => data.toString()) // Assuming the API returns a list of strings
+          .toList();
+
+      setState(() {
+        frames = fetchedFrames;
+      });
+    } else {
+      // Handle the error; maybe show a message to the user
     }
+  } catch (e) {
+    // Handle any exceptions; maybe show an error message
   }
+}
+
 ///dropdown/brands-by-frame
 ///filter by frames which we selected
-   Future<void> _fetchBrandsByFrame(String frame) async {
-    try {
-      final response = await http.get(Uri.parse('http://localhost:8001/dropdown/brands-by-frame?frame=$frame'));
+///
 
-      if (response.statusCode == 200) {
-        List<String> fetchedBrands = List<String>.from(json.decode(response.body));
-        
-        setState(() {
-          brands = fetchedBrands;
-        });
-      } else {
-        // Handle the error; maybe show a message to the user
-      }
-    } catch (e) {
-      // Handle any exceptions; maybe show an error message
+Future<void> _fetchBrandsByFrame(String frame) async {
+  try {
+    // Include the branch_id in the query parameters
+    final queryParameters = {
+      'frame': frame,
+      'branch_id': globals.branch_id.toString(), // Converting int to String to be used in URL
+    };
+    final uri = Uri.http('localhost:8001', '/dropdown/brands-by-frame', queryParameters);
+
+    final response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      List<String> fetchedBrands = List<String>.from(json.decode(response.body));
+      
+      setState(() {
+        brands = fetchedBrands;
+      });
+    } else {
+      // Handle the error; maybe show a message to the user
+      print('Error fetching brands: ${response.body}');
     }
+  } catch (e) {
+    // Handle any exceptions; maybe show an error message
+    print('Network Error: $e');
   }
+}
+
+
+  //  Future<void> _fetchBrandsByFrame(String frame) async {
+  //   try {
+  //     final response = await http.get(Uri.parse('http://localhost:8001/dropdown/brands-by-frame?frame=$frame'));
+
+  //     if (response.statusCode == 200) {
+  //       List<String> fetchedBrands = List<String>.from(json.decode(response.body));
+        
+  //       setState(() {
+  //         brands = fetchedBrands;
+  //       });
+  //     } else {
+  //       // Handle the error; maybe show a message to the user
+  //     }
+  //   } catch (e) {
+  //     // Handle any exceptions; maybe show an error message
+  //   }
+  // }
 //filtered bybrand and frame and get details
 ///dropdown/sizes-by-frame-and-brand
-  Future<void> _fetchSizesByFrameAndBrand(String frame, String brand) async {
+///
+
+Future<void> _fetchSizesByFrameAndBrand(String frame, String brand) async {
   try {
-    final response = await http.get(
-      Uri.parse('http://localhost:8001/dropdown/sizes-by-frame-and-brand?frame=$frame&brand=$brand'),
-    );
+    // Construct the URL with the branch_id query parameter
+    final queryParameters = {
+      'frame': frame,
+      'brand': brand,
+      'branch_id': globals.branch_id.toString(), // Converting int to String to be used in URL
+    };
+    final uri = Uri.http('localhost:8001', '/dropdown/sizes-by-frame-and-brand', queryParameters);
+
+    final response = await http.get(uri);
 
     if (response.statusCode == 200) {
       List<String> fetchedSizes = List<String>.from(json.decode(response.body));
@@ -155,18 +249,50 @@ Future<void> _fetchModelsBySelection(String frame, String brand, String size, St
       });
     } else {
       // Handle the error; maybe show a message to the user
+      print('Error fetching sizes: ${response.body}');
     }
   } catch (e) {
     // Handle any exceptions; maybe show an error message
+    print('Network Error: $e');
   }
 }
 
+
+//   Future<void> _fetchSizesByFrameAndBrand(String frame, String brand) async {
+//   try {
+//     final response = await http.get(
+//       Uri.parse('http://localhost:8001/dropdown/sizes-by-frame-and-brand?frame=$frame&brand=$brand'),
+//     );
+
+//     if (response.statusCode == 200) {
+//       List<String> fetchedSizes = List<String>.from(json.decode(response.body));
+      
+//       setState(() {
+//         sizes = fetchedSizes;
+//       });
+//     } else {
+//       // Handle the error; maybe show a message to the user
+//     }
+//   } catch (e) {
+//     // Handle any exceptions; maybe show an error message
+//   }
+// }
+
 ///dropdown/colors-by-frame-brand-size
+///
+
 Future<void> _fetchColorsByFrameBrandSize(String frame, String brand, String size) async {
   try {
-    final response = await http.get(
-      Uri.parse('http://localhost:8001/dropdown/colors-by-frame-brand-size?frame=$frame&brand=$brand&size=$size'),
-    );
+    // Construct the URL with the branch_id query parameter
+    final queryParameters = {
+      'frame': frame,
+      'brand': brand,
+      'size': size,
+      'branch_id': globals.branch_id.toString(), // Converting int to String to be used in URL
+    };
+    final uri = Uri.http('localhost:8001', '/dropdown/colors-by-frame-brand-size', queryParameters);
+
+    final response = await http.get(uri);
 
     if (response.statusCode == 200) {
       List<String> fetchedColors = List<String>.from(json.decode(response.body));
@@ -176,17 +302,64 @@ Future<void> _fetchColorsByFrameBrandSize(String frame, String brand, String siz
       });
     } else {
       // Handle the error; maybe show a message to the user
+      print('Error fetching colors: ${response.body}');
     }
   } catch (e) {
     // Handle any exceptions; maybe show an error message
+    print('Network Error: $e');
   }
 }
+// Future<void> _fetchColorsByFrameBrandSize(String frame, String brand, String size) async {
+//   try {
+//     final response = await http.get(
+//       Uri.parse('http://localhost:8001/dropdown/colors-by-frame-brand-size?frame=$frame&brand=$brand&size=$size'),
+//     );
+
+//     if (response.statusCode == 200) {
+//       List<String> fetchedColors = List<String>.from(json.decode(response.body));
+      
+//       setState(() {
+//         colors = fetchedColors;
+//       });
+//     } else {
+//       // Handle the error; maybe show a message to the user
+//     }
+//   } catch (e) {
+//     // Handle any exceptions; maybe show an error message
+//   }
+// }
 
 
+
+// Future<String> fetchPriceBySelection(String frame, String brand, String size, String color, String model) async {
+//   final url = Uri.parse('http://localhost:8001/dropdown/price-by-selection?frame=$frame&brand=$brand&size=$size&color=$color&model=$model');
+//   var response = await http.get(url);
+
+//   if (response.statusCode == 200) {
+//     var jsonResponse = jsonDecode(response.body);
+//     String priceString = jsonResponse['price'].toString();
+//     print("Price received: $priceString"); // Print the received price
+//     return priceString;
+//   } else {
+//     // Handle the error; maybe show a message to the user
+//     print("Error fetching price");
+//     return "Error fetching price";
+//   }
+// }
 
 Future<String> fetchPriceBySelection(String frame, String brand, String size, String color, String model) async {
-  final url = Uri.parse('http://localhost:8001/dropdown/price-by-selection?frame=$frame&brand=$brand&size=$size&color=$color&model=$model');
-  var response = await http.get(url);
+  // Construct the URL with the branch_id query parameter
+  final queryParameters = {
+    'frame': frame,
+    'brand': brand,
+    'size': size,
+    'color': color,
+    'model': model,
+    'branch_id': globals.branch_id.toString(), // Converting int to String to be used in URL
+  };
+  final uri = Uri.http('localhost:8001', '/dropdown/price-by-selection', queryParameters);
+
+  var response = await http.get(uri);
 
   if (response.statusCode == 200) {
     var jsonResponse = jsonDecode(response.body);
@@ -195,7 +368,7 @@ Future<String> fetchPriceBySelection(String frame, String brand, String size, St
     return priceString;
   } else {
     // Handle the error; maybe show a message to the user
-    print("Error fetching price");
+    print("Error fetching price: ${response.body}");
     return "Error fetching price";
   }
 }
