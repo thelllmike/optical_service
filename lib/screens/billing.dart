@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart';
  import 'package:optical_desktop/requesthadleing/customer.dart';
 import 'package:optical_desktop/controller/FormController.dart';
+// import 'package:optical_desktop/requesthadleing/lensDropdown.dart';
 import 'package:optical_desktop/global.dart' as globals;
 
 final ValueNotifier<ThemeData> _themeNotifier = ValueNotifier(ThemeData.dark());
@@ -50,6 +51,12 @@ class _BillScreenState extends State<BillScreen> {
   List<String> models = [];
   List<String> colors = [];
 
+  List<String> _lensCategories = [];
+  List<String> _coatings = [];
+  List<String> _powers = [];
+
+  String? _selectedCategory;
+
   double totalPrice = 0.0; // Total price
   double selectedPrice = 0.0; // Unit price of the selected model
 
@@ -59,15 +66,16 @@ class _BillScreenState extends State<BillScreen> {
   String? selectedColor; // Define a state variable for the selected color
   String? selectedModel;
   String? _selectedGender; // Declare this at the class level
+ final TextEditingController _quantityController = TextEditingController(text: "1");
+  // String? selectedLensCategory;
+  String? _selectedCoating;
+  String? _selectedPower;
 
-  // String? Value; // Initially null
+  bool isLoadingPowers = false;
 
-// TextEditingController _mobileNumberController = TextEditingController();
-// TextEditingController _fullNameController = TextEditingController();
-// TextEditingController _nicNumberController = TextEditingController();
-// TextEditingController _addressController = TextEditingController();
-// Initialize controllers in initState if needed
-
+ 
+double _quantity = 1; // Default quantity
+double _lensPrice = 0.0; // Unit price of the lens
 
   Map<String, TextEditingController> _controllers = {};
   DateTime _selectedDate = DateTime.now();
@@ -86,7 +94,8 @@ class _BillScreenState extends State<BillScreen> {
   void initState() {
     super.initState();
     _fetchFramesData();
-    
+    _fetchLensCategories();
+ _quantityController.addListener(_onQuantityChanged);
     
   }
 
@@ -95,8 +104,198 @@ class _BillScreenState extends State<BillScreen> {
   void dispose() {
     // Make sure to dispose of the form controller
     _formController.dispose();
+      _quantityController.dispose();
     super.dispose();
   }
+
+
+void _onQuantityChanged() {
+    _calculateAndDisplayTotalPrice();
+  }
+
+  void _calculateAndDisplayTotalPrice() {
+    if (_selectedCategory != null && _selectedCoating != null && _selectedPower != null && _selectedPower!.isNotEmpty) {
+      fetchLensPriceBySelection(
+        category: _selectedCategory!,
+        coating: _selectedCoating!,
+        power: double.tryParse(_selectedPower!) ?? 0.0,
+        branchId: globals.branch_id,
+      ).then((priceString) {
+        setState(() {
+          _lensPrice = double.tryParse(priceString) ?? 0.0;
+        });
+      });
+    }
+  }
+
+///lensdropdown/onlycategory
+ Future<List<String>> fetchLensCategories(int branch_id) async {
+    final uri = Uri.parse('http://localhost:8001/lensdropdown/onlycategory?branch_id=$branch_id');
+    final response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      List<dynamic> categoriesJson = json.decode(response.body);
+      return categoriesJson.cast<String>();
+    } else {
+      print('Error fetching categories: ${response.statusCode}');
+      return [];
+    }
+  }
+
+  Future<List<String>> fetchCoatingsByCategory(String category, int branchId) async {
+  final uri = Uri.parse('http://localhost:8001/lensdropdown/coatings-by-category?category=$category&branch_id=$branchId');
+  final response = await http.get(uri);
+
+  if (response.statusCode == 200) {
+    List<dynamic> coatingsJson = json.decode(response.body);
+    return coatingsJson.cast<String>();
+  } else {
+    print('Error fetching coatings: ${response.statusCode}');
+    return [];
+  }
+}
+
+Future<void> _fetchCoatingsForCategory(String category) async {
+  // Simulate fetching coatings data. Replace with your actual fetching logic
+  List<String> fetchedCoatings = await fetchCoatingsByCategory(category, globals.branch_id);
+  setState(() {
+    _coatings = fetchedCoatings;
+    // Optionally, set the first coating as selected by default
+    if (_coatings.isNotEmpty) {
+      _selectedCoating = _coatings.first;
+    }
+  });
+}
+
+
+void _onLensCategorySelected(String? newValue) {
+  if (newValue == null) return;
+
+  setState(() {
+    _selectedCategory = newValue;
+    _selectedCoating = null; // Reset selected coating when category changes
+    _selectedPower = null; // Optionally reset selected power too
+    _coatings = []; // Reset coatings list
+    _powers = []; // Reset powers list
+  });
+  _fetchCoatingsForCategory(newValue);
+}
+
+
+
+
+ Future<void> _fetchLensCategories() async {
+    try {
+      int branch_id = globals.branch_id; // Ensure this is correctly initialized
+      List<String> categories = await fetchLensCategories(branch_id);
+      setState(() {
+        _lensCategories = categories;
+      });
+    } catch (e) {
+      // Handle the error, possibly by showing an error message or logging
+      print('Error fetching lens categories: $e');
+    }
+  }
+
+
+  Widget _buildLensCategoryDropdown() {
+  return DropdownButtonFormField<String>(
+    value: _selectedCategory,
+    onChanged: (String? newValue) async {
+      if (newValue != null) {
+        // Update the state to reflect the new selected category
+        setState(() {
+          _selectedCategory = newValue;
+          _coatings.clear(); // Optionally clear coatings when category changes
+          _selectedCoating = null; // Reset selected coating
+          _powers.clear(); // Optionally clear powers when category changes
+          _selectedPower = null; // Reset selected power
+        });
+        // Fetch new coatings based on the selected category
+        await _fetchCoatingsForCategory(newValue);
+        // You can also directly call to fetch powers if required here,
+        // but usually, you would fetch powers after a coating is selected
+      }
+    },
+    items: _lensCategories.map<DropdownMenuItem<String>>((String category) {
+      return DropdownMenuItem<String>(
+        value: category,
+        child: Text(category),
+      );
+    }).toList(),
+    decoration: InputDecoration(
+      labelText: 'Lens Category',
+      border: OutlineInputBorder(),
+      contentPadding: EdgeInsets.all(8),
+    ),
+  );
+}
+
+
+  //drodown fetch by power
+///lensdropdown/powers-by-category-and-coating
+Future<List<String>> fetchPowersByCategoryAndCoating(String category, String coating, int branchId) async {
+  final uri = Uri.parse('http://localhost:8001/lensdropdown/powers-by-category-and-coating')
+      .replace(queryParameters: {
+        'category': category,
+        'coating': coating,
+        'branch_id': branchId.toString(),
+      });
+
+  try {
+    final response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      // Parse the JSON response and ensure numbers are converted to strings
+      final List<dynamic> powersJson = json.decode(response.body);
+      // Use .map() to convert each element to a string, handling numbers correctly
+      List<String> powers = powersJson.map((dynamic value) => value.toString()).toList();
+      return powers;
+    } else {
+      // Log or handle HTTP errors here
+      print('Error fetching powers: HTTP ${response.statusCode}');
+      return [];
+    }
+  } catch (e) {
+    // Handle any kind of exception here, not just HTTP exceptions
+    print('Error fetching powers: $e');
+    return [];
+  }
+}
+
+//fetch by categoty ,coating an dpower
+
+Future<String> fetchLensPriceBySelection({
+  required String category,
+  required String coating,
+  required double power,
+  required int branchId,
+}) async {
+  final uri = Uri.parse('http://localhost:8001/lensdropdown/lens-price-by-selection')
+      .replace(queryParameters: {
+        'category': category,
+        'coating': coating,
+        'power': power.toString(),
+        'branch_id': branchId.toString(),
+      });
+
+  try {
+    final response = await http.get(uri);
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      return jsonResponse['price'].toString(); // Assuming 'price' is a key in the response JSON
+    } else {
+      print('Error fetching price: ${response.statusCode}');
+      return "Error fetching price";
+    }
+  } catch (e) {
+    print('Exception when fetching price: $e');
+    return "Error fetching price";
+  }
+}
+
+
+
 
   ///dropdown/models-by-selection
 
@@ -161,7 +360,6 @@ class _BillScreenState extends State<BillScreen> {
 
   ///dropdown/brands-by-frame
   ///filter by frames which we selected
-  ///
 
   Future<void> _fetchBrandsByFrame(String frame) async {
     try {
@@ -719,17 +917,128 @@ _buildTextField('Address', _formController.addressController, maxLines: 3),
     ]);
   }
 
-  Widget _buildLensDetailsSection() {
-    return _buildDetailsCard('Lens Details', [
-      _buildDropdownField('Lens Category', ['Category1', 'Category2'],
-          onSelected: (String) {}),
-      _buildDropdownField('Coating', ['Coating1', 'Coating1'],
-          onSelected: (String) {}),
-      _buildDropdownField('Power', ['-1', '+2'], onSelected: (String) {}),
-     _buildTextField('Quantity',  _formController.quantityController),
-    _buildTextField('Price',  _formController.priceController),
-    ]);
+Widget _buildLensDetailsSection() {
+  return _buildDetailsCard('Lens Details', [
+    _buildDropdownField(
+      'Lens Category', 
+      _lensCategories, // Use the fetched categories
+      value: _selectedCategory, // Bind the selected value
+      onSelected: (String? newValue) {
+        setState(() {
+          _selectedCategory = newValue;
+        });
+        // Make sure to fetch coatings after setting the new category
+        if (newValue != null) {
+          _fetchCoatingsForCategory(newValue);
+        }
+      },
+    ),
+    _buildDropdownField(
+      'Coating', 
+      _coatings, // Use the dynamically updated coatings list
+      value: _selectedCoating, // Bind the selected value
+      onSelected: (String? newValue) {
+        setState(() {
+          _selectedCoating = newValue;
+        });
+        // Fetch powers after setting the new coating
+        if (_selectedCategory != null && newValue != null) {
+          _fetchPowersForSelectedCategoryAndCoating(_selectedCategory!, newValue);
+        }
+      },
+    ),
+    _buildDropdownField(
+        'Power',
+        _powers, // Assuming this is dynamically updated based on selected coating
+        value: _selectedPower,
+        onSelected: (String? newValue) {
+          setState(() {
+            _selectedPower = newValue;
+          });
+          _calculateAndDisplayTotalPrice();
+        },
+      ),
+   _buildTextField('Quantity', _quantityController),
+     _buildReadOnlyTextField('Total Price', (_lensPrice * (double.tryParse(_quantityController.text) ?? 1)).toStringAsFixed(2)),
+  ]);
+}
+
+void _onCoatingSelected(String? newValue) {
+  if (newValue == null) return;
+
+  setState(() {
+    _selectedCoating = newValue;
+    _selectedPower = null; // Reset selected power when coating changes
+    _powers = []; // Reset powers list
+  });
+  if (_selectedCategory != null) {
+    _fetchPowersForSelectedCategoryAndCoating(_selectedCategory!, newValue);
   }
+}
+
+// Example call to fetchPowersByCategoryAndCoating with all required arguments
+// When you fetch the powers, update the state like this:
+Future<void> _fetchPowersForSelectedCategoryAndCoating(String category, String coating) async {
+  try {
+    // Set loading state to true to show a loading indicator, if you have one
+    setState(() {
+      isLoadingPowers = true;
+    });
+
+    // Call the API to fetch powers
+    List<String> powers = await fetchPowersByCategoryAndCoating(category, coating, globals.branch_id);
+print("Fetched powers: $powers"); // Add this line to debug
+    // Once the data is fetched, update the state with the new powers
+    setState(() {
+      _powers = powers;
+      // Set the first power as selected by default, or handle as needed
+      _selectedPower = _powers.isNotEmpty ? _powers.first : null;
+      isLoadingPowers = false; // Set loading state to false after fetching data
+    });
+  } catch (e) {
+    // If an error occurs, print it to the console or handle it as needed
+    print('Error fetching powers: $e');
+    // Optionally, update the state to reflect that an error occurred
+    setState(() {
+      _powers = []; // Consider clearing the powers or setting them to a default state
+      _selectedPower = null;
+      isLoadingPowers = false; // Ensure to set loading state to false even on error
+    });
+  }
+}
+
+
+// When building the DropdownButtonFormField, make sure to use the updated _powers list
+Widget _buildPowerDropdown() {
+  // Handle loading state if necessary
+  if (isLoadingPowers) {
+    return CircularProgressIndicator(); // Or some other loading indicator
+  }
+
+  // Power Dropdown
+  return DropdownButtonFormField<String>(
+    value: _selectedPower,
+    items: _powers.map((power) {
+      return DropdownMenuItem<String>(
+        value: power,
+        child: Text(power),
+      );
+    }).toList(),
+    onChanged: (newValue) {
+      setState(() {
+        _selectedPower = newValue;
+      });
+    },
+    decoration: InputDecoration(
+      labelText: 'Power',
+      border: OutlineInputBorder(),
+      contentPadding: EdgeInsets.all(8),
+    ),
+  );
+}
+
+
+
 
 // This method builds the editable table for the prescription details
   Widget _buildEditableTable() {

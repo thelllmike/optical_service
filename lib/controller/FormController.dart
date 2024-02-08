@@ -13,6 +13,7 @@ class FormController {
   TextEditingController balanceAmountController = TextEditingController();
   TextEditingController quantityController = TextEditingController();
   TextEditingController priceController = TextEditingController();
+  // final TextEditingController _quantityController = TextEditingController(text: "1");
 
   // Add other controllers if needed
 
@@ -31,6 +32,7 @@ class FormController {
     balanceAmountController.dispose();
      quantityController.dispose();
     priceController.dispose();
+    // _quantityController.dispose();
     // Dispose other controllers
   }
 }
