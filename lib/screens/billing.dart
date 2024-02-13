@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart';
- import 'package:optical_desktop/requesthadleing/customer.dart';
+import 'package:optical_desktop/requesthadleing/customer.dart';
+import 'package:optical_desktop/requesthadleing/deliverydate.dart';
 import 'package:optical_desktop/controller/FormController.dart';
+import 'package:intl/intl.dart';
+
 // import 'package:optical_desktop/requesthadleing/lensDropdown.dart';
 import 'package:optical_desktop/global.dart' as globals;
 
@@ -44,7 +47,7 @@ class BillScreen extends StatefulWidget {
 }
 
 class _BillScreenState extends State<BillScreen> {
-    final FormController _formController = FormController();
+  final FormController _formController = FormController();
   List<String> frames = [];
   List<String> brands = [];
   List<String> sizes = [];
@@ -66,16 +69,17 @@ class _BillScreenState extends State<BillScreen> {
   String? selectedColor; // Define a state variable for the selected color
   String? selectedModel;
   String? _selectedGender; // Declare this at the class level
- final TextEditingController _quantityController = TextEditingController(text: "1");
+  final TextEditingController _quantityController =
+      TextEditingController(text: "1");
+//  final FormController formController = FormController();
   // String? selectedLensCategory;
   String? _selectedCoating;
   String? _selectedPower;
 
   bool isLoadingPowers = false;
 
- 
-double _quantity = 1; // Default quantity
-double _lensPrice = 0.0; // Unit price of the lens
+  double _quantity = 1; // Default quantity
+  double _lensPrice = 0.0; // Unit price of the lens
 
   Map<String, TextEditingController> _controllers = {};
   DateTime _selectedDate = DateTime.now();
@@ -95,26 +99,27 @@ double _lensPrice = 0.0; // Unit price of the lens
     super.initState();
     _fetchFramesData();
     _fetchLensCategories();
- _quantityController.addListener(_onQuantityChanged);
-    
+    _quantityController.addListener(_onQuantityChanged);
   }
 
-  
   @override
   void dispose() {
     // Make sure to dispose of the form controller
     _formController.dispose();
-      _quantityController.dispose();
+    _quantityController.dispose();
+    // formController.dispose();
     super.dispose();
   }
 
-
-void _onQuantityChanged() {
+  void _onQuantityChanged() {
     _calculateAndDisplayTotalPrice();
   }
 
   void _calculateAndDisplayTotalPrice() {
-    if (_selectedCategory != null && _selectedCoating != null && _selectedPower != null && _selectedPower!.isNotEmpty) {
+    if (_selectedCategory != null &&
+        _selectedCoating != null &&
+        _selectedPower != null &&
+        _selectedPower!.isNotEmpty) {
       fetchLensPriceBySelection(
         category: _selectedCategory!,
         coating: _selectedCoating!,
@@ -128,9 +133,10 @@ void _onQuantityChanged() {
     }
   }
 
-///lensdropdown/onlycategory
- Future<List<String>> fetchLensCategories(int branch_id) async {
-    final uri = Uri.parse('http://localhost:8001/lensdropdown/onlycategory?branch_id=$branch_id');
+  ///lensdropdown/onlycategory
+  Future<List<String>> fetchLensCategories(int branch_id) async {
+    final uri = Uri.parse(
+        'http://localhost:8001/lensdropdown/onlycategory?branch_id=$branch_id');
     final response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -142,49 +148,48 @@ void _onQuantityChanged() {
     }
   }
 
-  Future<List<String>> fetchCoatingsByCategory(String category, int branchId) async {
-  final uri = Uri.parse('http://localhost:8001/lensdropdown/coatings-by-category?category=$category&branch_id=$branchId');
-  final response = await http.get(uri);
+  Future<List<String>> fetchCoatingsByCategory(
+      String category, int branchId) async {
+    final uri = Uri.parse(
+        'http://localhost:8001/lensdropdown/coatings-by-category?category=$category&branch_id=$branchId');
+    final response = await http.get(uri);
 
-  if (response.statusCode == 200) {
-    List<dynamic> coatingsJson = json.decode(response.body);
-    return coatingsJson.cast<String>();
-  } else {
-    print('Error fetching coatings: ${response.statusCode}');
-    return [];
-  }
-}
-
-Future<void> _fetchCoatingsForCategory(String category) async {
-  // Simulate fetching coatings data. Replace with your actual fetching logic
-  List<String> fetchedCoatings = await fetchCoatingsByCategory(category, globals.branch_id);
-  setState(() {
-    _coatings = fetchedCoatings;
-    // Optionally, set the first coating as selected by default
-    if (_coatings.isNotEmpty) {
-      _selectedCoating = _coatings.first;
+    if (response.statusCode == 200) {
+      List<dynamic> coatingsJson = json.decode(response.body);
+      return coatingsJson.cast<String>();
+    } else {
+      print('Error fetching coatings: ${response.statusCode}');
+      return [];
     }
-  });
-}
+  }
 
+  Future<void> _fetchCoatingsForCategory(String category) async {
+    // Simulate fetching coatings data. Replace with your actual fetching logic
+    List<String> fetchedCoatings =
+        await fetchCoatingsByCategory(category, globals.branch_id);
+    setState(() {
+      _coatings = fetchedCoatings;
+      // Optionally, set the first coating as selected by default
+      if (_coatings.isNotEmpty) {
+        _selectedCoating = _coatings.first;
+      }
+    });
+  }
 
-void _onLensCategorySelected(String? newValue) {
-  if (newValue == null) return;
+  void _onLensCategorySelected(String? newValue) {
+    if (newValue == null) return;
 
-  setState(() {
-    _selectedCategory = newValue;
-    _selectedCoating = null; // Reset selected coating when category changes
-    _selectedPower = null; // Optionally reset selected power too
-    _coatings = []; // Reset coatings list
-    _powers = []; // Reset powers list
-  });
-  _fetchCoatingsForCategory(newValue);
-}
+    setState(() {
+      _selectedCategory = newValue;
+      _selectedCoating = null; // Reset selected coating when category changes
+      _selectedPower = null; // Optionally reset selected power too
+      _coatings = []; // Reset coatings list
+      _powers = []; // Reset powers list
+    });
+    _fetchCoatingsForCategory(newValue);
+  }
 
-
-
-
- Future<void> _fetchLensCategories() async {
+  Future<void> _fetchLensCategories() async {
     try {
       int branch_id = globals.branch_id; // Ensure this is correctly initialized
       List<String> categories = await fetchLensCategories(branch_id);
@@ -197,105 +202,106 @@ void _onLensCategorySelected(String? newValue) {
     }
   }
 
-
   Widget _buildLensCategoryDropdown() {
-  return DropdownButtonFormField<String>(
-    value: _selectedCategory,
-    onChanged: (String? newValue) async {
-      if (newValue != null) {
-        // Update the state to reflect the new selected category
-        setState(() {
-          _selectedCategory = newValue;
-          _coatings.clear(); // Optionally clear coatings when category changes
-          _selectedCoating = null; // Reset selected coating
-          _powers.clear(); // Optionally clear powers when category changes
-          _selectedPower = null; // Reset selected power
-        });
-        // Fetch new coatings based on the selected category
-        await _fetchCoatingsForCategory(newValue);
-        // You can also directly call to fetch powers if required here,
-        // but usually, you would fetch powers after a coating is selected
-      }
-    },
-    items: _lensCategories.map<DropdownMenuItem<String>>((String category) {
-      return DropdownMenuItem<String>(
-        value: category,
-        child: Text(category),
-      );
-    }).toList(),
-    decoration: InputDecoration(
-      labelText: 'Lens Category',
-      border: OutlineInputBorder(),
-      contentPadding: EdgeInsets.all(8),
-    ),
-  );
-}
-
+    return DropdownButtonFormField<String>(
+      value: _selectedCategory,
+      onChanged: (String? newValue) async {
+        if (newValue != null) {
+          // Update the state to reflect the new selected category
+          setState(() {
+            _selectedCategory = newValue;
+            _coatings
+                .clear(); // Optionally clear coatings when category changes
+            _selectedCoating = null; // Reset selected coating
+            _powers.clear(); // Optionally clear powers when category changes
+            _selectedPower = null; // Reset selected power
+          });
+          // Fetch new coatings based on the selected category
+          await _fetchCoatingsForCategory(newValue);
+          // You can also directly call to fetch powers if required here,
+          // but usually, you would fetch powers after a coating is selected
+        }
+      },
+      items: _lensCategories.map<DropdownMenuItem<String>>((String category) {
+        return DropdownMenuItem<String>(
+          value: category,
+          child: Text(category),
+        );
+      }).toList(),
+      decoration: InputDecoration(
+        labelText: 'Lens Category',
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.all(8),
+      ),
+    );
+  }
 
   //drodown fetch by power
-///lensdropdown/powers-by-category-and-coating
-Future<List<String>> fetchPowersByCategoryAndCoating(String category, String coating, int branchId) async {
-  final uri = Uri.parse('http://localhost:8001/lensdropdown/powers-by-category-and-coating')
-      .replace(queryParameters: {
-        'category': category,
-        'coating': coating,
-        'branch_id': branchId.toString(),
-      });
+  ///lensdropdown/powers-by-category-and-coating
+  Future<List<String>> fetchPowersByCategoryAndCoating(
+      String category, String coating, int branchId) async {
+    final uri = Uri.parse(
+            'http://localhost:8001/lensdropdown/powers-by-category-and-coating')
+        .replace(queryParameters: {
+      'category': category,
+      'coating': coating,
+      'branch_id': branchId.toString(),
+    });
 
-  try {
-    final response = await http.get(uri);
+    try {
+      final response = await http.get(uri);
 
-    if (response.statusCode == 200) {
-      // Parse the JSON response and ensure numbers are converted to strings
-      final List<dynamic> powersJson = json.decode(response.body);
-      // Use .map() to convert each element to a string, handling numbers correctly
-      List<String> powers = powersJson.map((dynamic value) => value.toString()).toList();
-      return powers;
-    } else {
-      // Log or handle HTTP errors here
-      print('Error fetching powers: HTTP ${response.statusCode}');
+      if (response.statusCode == 200) {
+        // Parse the JSON response and ensure numbers are converted to strings
+        final List<dynamic> powersJson = json.decode(response.body);
+        // Use .map() to convert each element to a string, handling numbers correctly
+        List<String> powers =
+            powersJson.map((dynamic value) => value.toString()).toList();
+        return powers;
+      } else {
+        // Log or handle HTTP errors here
+        print('Error fetching powers: HTTP ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      // Handle any kind of exception here, not just HTTP exceptions
+      print('Error fetching powers: $e');
       return [];
     }
-  } catch (e) {
-    // Handle any kind of exception here, not just HTTP exceptions
-    print('Error fetching powers: $e');
-    return [];
   }
-}
 
 //fetch by categoty ,coating an dpower
 
-Future<String> fetchLensPriceBySelection({
-  required String category,
-  required String coating,
-  required double power,
-  required int branchId,
-}) async {
-  final uri = Uri.parse('http://localhost:8001/lensdropdown/lens-price-by-selection')
-      .replace(queryParameters: {
-        'category': category,
-        'coating': coating,
-        'power': power.toString(),
-        'branch_id': branchId.toString(),
-      });
+  Future<String> fetchLensPriceBySelection({
+    required String category,
+    required String coating,
+    required double power,
+    required int branchId,
+  }) async {
+    final uri =
+        Uri.parse('http://localhost:8001/lensdropdown/lens-price-by-selection')
+            .replace(queryParameters: {
+      'category': category,
+      'coating': coating,
+      'power': power.toString(),
+      'branch_id': branchId.toString(),
+    });
 
-  try {
-    final response = await http.get(uri);
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(response.body);
-      return jsonResponse['price'].toString(); // Assuming 'price' is a key in the response JSON
-    } else {
-      print('Error fetching price: ${response.statusCode}');
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        return jsonResponse['price']
+            .toString(); // Assuming 'price' is a key in the response JSON
+      } else {
+        print('Error fetching price: ${response.statusCode}');
+        return "Error fetching price";
+      }
+    } catch (e) {
+      print('Exception when fetching price: $e');
       return "Error fetching price";
     }
-  } catch (e) {
-    print('Exception when fetching price: $e');
-    return "Error fetching price";
   }
-}
-
-
-
 
   ///dropdown/models-by-selection
 
@@ -488,22 +494,22 @@ Future<String> fetchLensPriceBySelection({
     }
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null && picked != _selectedDate)
-      setState(() {
-        _selectedDate = picked;
-      });
+Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+  final DateTime? pickedDate = await showDatePicker(
+    context: context,
+    initialDate: DateTime.now(),
+    firstDate: DateTime(2000),
+    lastDate: DateTime(2101),
+  );
+  if (pickedDate != null) {
+    controller.text = DateFormat('yyyy-MM-dd').format(pickedDate);
   }
+}
+
+
+
 
 //customer details
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -531,7 +537,7 @@ Future<String> fetchLensPriceBySelection({
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Handle save & print logic here
-           _submitCustomerForm(); 
+          _submitCustomerForm();
         },
         child: Icon(Icons.print),
         tooltip: 'Save & Print (F12)',
@@ -539,7 +545,7 @@ Future<String> fetchLensPriceBySelection({
     );
   }
 
-  void _submitCustomerForm() async {
+void _submitCustomerForm() async {
   // Collecting the form data from the text editing controllers
   String mobileNumber = _formController.mobileNumberController.text.trim();
   String fullName = _formController.fullNameController.text.trim();
@@ -557,19 +563,18 @@ Future<String> fetchLensPriceBySelection({
 
   // If the form is valid, proceed with the submission
   try {
-    // Assuming CustomerPostService is your backend service class
-    bool success = await CustomerPostService.postCustomerDetails(
+    int? customerId = await CustomerPostService.postCustomerDetails(
       mobileNumber: mobileNumber,
       fullName: fullName,
       nicNumber: nicNumber,
       address: address,
       gender: gender,
-    
     );
 
-    if (success) {
-      // Handle the successful submission (e.g., showing a success dialog or navigating to another page)
-      print('Customer details submitted successfully.');
+    if (customerId != null) {
+      // Now that the customer is saved, submit the delivery date service with this customer ID
+      _formController.customerId = customerId; // Make sure your form controller can store the customerId
+      await _submitForm(); // This method now uses the updated _formController.customerId
     } else {
       // Handle submission failure (e.g., showing an error dialog)
       print('Failed to submit customer details.');
@@ -580,34 +585,64 @@ Future<String> fetchLensPriceBySelection({
   }
 }
 
-bool _validateForm(String mobileNumber, String fullName, String nicNumber, String address, String gender) {
-  // Define a mobile number pattern (e.g., Sri Lankan mobile numbers)
-  final mobileNumberPattern = RegExp(r'^07[01245678][0-9]{7}$');
-  
-  // Define a NIC number pattern (e.g., old NIC number format in Sri Lanka)
-  final nicNumberPattern = RegExp(r'^[0-9]{9}[vVxX]$');
 
-  // Check if any of the fields are empty
-  if (mobileNumber.isEmpty || fullName.isEmpty || nicNumber.isEmpty || address.isEmpty || gender.isEmpty) {
-    return false;
+
+  Future<void> _submitForm() async {
+  String invoiceDate = _formController.invoiceDateController.text;
+  String deliveryDate = _formController.deliveryDateController.text;
+  String salesPerson = _formController.salesPersonController.text;
+
+  // Check if customerId is not null
+  if (_formController.customerId != null) {
+    bool success = await DeliveryDateService.submitBilling(
+      invoiceDate: invoiceDate,
+      deliveryDate: deliveryDate,
+      salesPerson: salesPerson,
+      customerId: _formController.customerId!, // Use the customerId with non-null assertion
+      // Additional fields as necessary
+    );
+
+    if (success) {
+      // Implement success logic
+    } else {
+      // Implement failure logic
+    }
+  } else {
+    // Handle the case where customerId is null
+    // Maybe show an error message or log an error
   }
-
-  // Validate the mobile number against the pattern
-  if (!mobileNumberPattern.hasMatch(mobileNumber)) {
-    return false;
-  }
-
-  // Validate the NIC number against the pattern
-  if (!nicNumberPattern.hasMatch(nicNumber)) {
-    return false;
-  }
-
-  // If all checks pass, return true
-  return true;
 }
 
+  bool _validateForm(String mobileNumber, String fullName, String nicNumber,
+      String address, String gender) {
+    // Define a mobile number pattern (e.g., Sri Lankan mobile numbers)
+    final mobileNumberPattern = RegExp(r'^07[01245678][0-9]{7}$');
 
+    // Define a NIC number pattern (e.g., old NIC number format in Sri Lanka)
+    final nicNumberPattern = RegExp(r'^[0-9]{9}[vVxX]$');
 
+    // Check if any of the fields are empty
+    if (mobileNumber.isEmpty ||
+        fullName.isEmpty ||
+        nicNumber.isEmpty ||
+        address.isEmpty ||
+        gender.isEmpty) {
+      return false;
+    }
+
+    // Validate the mobile number against the pattern
+    if (!mobileNumberPattern.hasMatch(mobileNumber)) {
+      return false;
+    }
+
+    // Validate the NIC number against the pattern
+    if (!nicNumberPattern.hasMatch(nicNumber)) {
+      return false;
+    }
+
+    // If all checks pass, return true
+    return true;
+  }
 
   Widget _buildDropdownField(String label, List<String> items,
       {String? value, required Function(String) onSelected}) {
@@ -716,10 +751,11 @@ bool _validateForm(String mobileNumber, String fullName, String nicNumber, Strin
 
   Widget _buildCustomerDetailsSection() {
     return _buildDetailsCard('Customer Details', [
-_buildTextField('Mobile Number', _formController.mobileNumberController),
-_buildTextField('Full Name', _formController.fullNameController),
-_buildTextField('NIC Number', _formController.nicNumberController),
-_buildTextField('Address', _formController.addressController, maxLines: 3),
+      _buildTextField('Mobile Number', _formController.mobileNumberController),
+      _buildTextField('Full Name', _formController.fullNameController),
+      _buildTextField('NIC Number', _formController.nicNumberController),
+      _buildTextField('Address', _formController.addressController,
+          maxLines: 3),
 
       _buildGenderDropdown()
       // _buildDropdownField('Gender', ['Male', 'Female', 'Other'], onSelected: (String ) {  }),
@@ -908,46 +944,72 @@ _buildTextField('Address', _formController.addressController, maxLines: 3),
     ]);
   }
 
+//http://localhost:8001//billing/billings
   Widget _buildInvoiceAndDeliveryDetailsSection() {
     return _buildDetailsCard('Invoice & Delivery Details', [
-      _buildDatePickerField('Invoice Date'),
-      _buildDatePickerField('Delivery Date'),
-      _buildDropdownField('Sales Person', ['Person1', 'Person2'],
-          onSelected: (String) {}),
+      _buildDatePickerField(
+          'Invoice Date', _formController.invoiceDateController),
+      _buildDatePickerField(
+          'Delivery Date', _formController.deliveryDateController),
+      _buildSalesPersonTextField(), // Updated to use the getter
     ]);
   }
 
-Widget _buildLensDetailsSection() {
-  return _buildDetailsCard('Lens Details', [
-    _buildDropdownField(
-      'Lens Category', 
-      _lensCategories, // Use the fetched categories
-      value: _selectedCategory, // Bind the selected value
-      onSelected: (String? newValue) {
-        setState(() {
-          _selectedCategory = newValue;
-        });
-        // Make sure to fetch coatings after setting the new category
-        if (newValue != null) {
-          _fetchCoatingsForCategory(newValue);
-        }
-      },
-    ),
-    _buildDropdownField(
-      'Coating', 
-      _coatings, // Use the dynamically updated coatings list
-      value: _selectedCoating, // Bind the selected value
-      onSelected: (String? newValue) {
-        setState(() {
-          _selectedCoating = newValue;
-        });
-        // Fetch powers after setting the new coating
-        if (_selectedCategory != null && newValue != null) {
-          _fetchPowersForSelectedCategoryAndCoating(_selectedCategory!, newValue);
-        }
-      },
-    ),
-    _buildDropdownField(
+  Widget _buildSalesPersonTextField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: TextFormField(
+        controller: _formController
+            .salesPersonController, // Corrected access to use the getter
+        decoration: InputDecoration(
+          labelText: 'Sales Person',
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter the salesperson\'s name';
+          }
+          return null; // Return null if the input is valid
+        },
+      ),
+    );
+  }
+
+
+
+  Widget _buildLensDetailsSection() {
+    return _buildDetailsCard('Lens Details', [
+      _buildDropdownField(
+        'Lens Category',
+        _lensCategories, // Use the fetched categories
+        value: _selectedCategory, // Bind the selected value
+        onSelected: (String? newValue) {
+          setState(() {
+            _selectedCategory = newValue;
+          });
+          // Make sure to fetch coatings after setting the new category
+          if (newValue != null) {
+            _fetchCoatingsForCategory(newValue);
+          }
+        },
+      ),
+      _buildDropdownField(
+        'Coating',
+        _coatings, // Use the dynamically updated coatings list
+        value: _selectedCoating, // Bind the selected value
+        onSelected: (String? newValue) {
+          setState(() {
+            _selectedCoating = newValue;
+          });
+          // Fetch powers after setting the new coating
+          if (_selectedCategory != null && newValue != null) {
+            _fetchPowersForSelectedCategoryAndCoating(
+                _selectedCategory!, newValue);
+          }
+        },
+      ),
+      _buildDropdownField(
         'Power',
         _powers, // Assuming this is dynamically updated based on selected coating
         value: _selectedPower,
@@ -958,87 +1020,91 @@ Widget _buildLensDetailsSection() {
           _calculateAndDisplayTotalPrice();
         },
       ),
-   _buildTextField('Quantity', _quantityController),
-     _buildReadOnlyTextField('Total Price', (_lensPrice * (double.tryParse(_quantityController.text) ?? 1)).toStringAsFixed(2)),
-  ]);
-}
-
-void _onCoatingSelected(String? newValue) {
-  if (newValue == null) return;
-
-  setState(() {
-    _selectedCoating = newValue;
-    _selectedPower = null; // Reset selected power when coating changes
-    _powers = []; // Reset powers list
-  });
-  if (_selectedCategory != null) {
-    _fetchPowersForSelectedCategoryAndCoating(_selectedCategory!, newValue);
+      _buildTextField('Quantity', _quantityController),
+      _buildReadOnlyTextField(
+          'Total Price',
+          (_lensPrice * (double.tryParse(_quantityController.text) ?? 1))
+              .toStringAsFixed(2)),
+    ]);
   }
-}
+
+  void _onCoatingSelected(String? newValue) {
+    if (newValue == null) return;
+
+    setState(() {
+      _selectedCoating = newValue;
+      _selectedPower = null; // Reset selected power when coating changes
+      _powers = []; // Reset powers list
+    });
+    if (_selectedCategory != null) {
+      _fetchPowersForSelectedCategoryAndCoating(_selectedCategory!, newValue);
+    }
+  }
 
 // Example call to fetchPowersByCategoryAndCoating with all required arguments
 // When you fetch the powers, update the state like this:
-Future<void> _fetchPowersForSelectedCategoryAndCoating(String category, String coating) async {
-  try {
-    // Set loading state to true to show a loading indicator, if you have one
-    setState(() {
-      isLoadingPowers = true;
-    });
+  Future<void> _fetchPowersForSelectedCategoryAndCoating(
+      String category, String coating) async {
+    try {
+      // Set loading state to true to show a loading indicator, if you have one
+      setState(() {
+        isLoadingPowers = true;
+      });
 
-    // Call the API to fetch powers
-    List<String> powers = await fetchPowersByCategoryAndCoating(category, coating, globals.branch_id);
-print("Fetched powers: $powers"); // Add this line to debug
-    // Once the data is fetched, update the state with the new powers
-    setState(() {
-      _powers = powers;
-      // Set the first power as selected by default, or handle as needed
-      _selectedPower = _powers.isNotEmpty ? _powers.first : null;
-      isLoadingPowers = false; // Set loading state to false after fetching data
-    });
-  } catch (e) {
-    // If an error occurs, print it to the console or handle it as needed
-    print('Error fetching powers: $e');
-    // Optionally, update the state to reflect that an error occurred
-    setState(() {
-      _powers = []; // Consider clearing the powers or setting them to a default state
-      _selectedPower = null;
-      isLoadingPowers = false; // Ensure to set loading state to false even on error
-    });
+      // Call the API to fetch powers
+      List<String> powers = await fetchPowersByCategoryAndCoating(
+          category, coating, globals.branch_id);
+      print("Fetched powers: $powers"); // Add this line to debug
+      // Once the data is fetched, update the state with the new powers
+      setState(() {
+        _powers = powers;
+        // Set the first power as selected by default, or handle as needed
+        _selectedPower = _powers.isNotEmpty ? _powers.first : null;
+        isLoadingPowers =
+            false; // Set loading state to false after fetching data
+      });
+    } catch (e) {
+      // If an error occurs, print it to the console or handle it as needed
+      print('Error fetching powers: $e');
+      // Optionally, update the state to reflect that an error occurred
+      setState(() {
+        _powers =
+            []; // Consider clearing the powers or setting them to a default state
+        _selectedPower = null;
+        isLoadingPowers =
+            false; // Ensure to set loading state to false even on error
+      });
+    }
   }
-}
-
 
 // When building the DropdownButtonFormField, make sure to use the updated _powers list
-Widget _buildPowerDropdown() {
-  // Handle loading state if necessary
-  if (isLoadingPowers) {
-    return CircularProgressIndicator(); // Or some other loading indicator
+  Widget _buildPowerDropdown() {
+    // Handle loading state if necessary
+    if (isLoadingPowers) {
+      return CircularProgressIndicator(); // Or some other loading indicator
+    }
+
+    // Power Dropdown
+    return DropdownButtonFormField<String>(
+      value: _selectedPower,
+      items: _powers.map((power) {
+        return DropdownMenuItem<String>(
+          value: power,
+          child: Text(power),
+        );
+      }).toList(),
+      onChanged: (newValue) {
+        setState(() {
+          _selectedPower = newValue;
+        });
+      },
+      decoration: InputDecoration(
+        labelText: 'Power',
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.all(8),
+      ),
+    );
   }
-
-  // Power Dropdown
-  return DropdownButtonFormField<String>(
-    value: _selectedPower,
-    items: _powers.map((power) {
-      return DropdownMenuItem<String>(
-        value: power,
-        child: Text(power),
-      );
-    }).toList(),
-    onChanged: (newValue) {
-      setState(() {
-        _selectedPower = newValue;
-      });
-    },
-    decoration: InputDecoration(
-      labelText: 'Power',
-      border: OutlineInputBorder(),
-      contentPadding: EdgeInsets.all(8),
-    ),
-  );
-}
-
-
-
 
 // This method builds the editable table for the prescription details
   Widget _buildEditableTable() {
@@ -1101,66 +1167,65 @@ Widget _buildPowerDropdown() {
     );
   }
 
-Widget _buildPaymentDetailsSection() {
-  return _buildDetailsCard('Payment Details', [
-    _buildTextField('Total Amount', _formController.totalAmountController),
-    _buildTextField('Discount', _formController.discountController),
-    _buildTextField('Fitting Charges', _formController.fittingChargesController),
-    _buildTextField('Grand Total', _formController.grandTotalController),
-    _buildTextField('Advance Paid', _formController.advancePaidController),
-    _buildTextField('Balance Amount', _formController.balanceAmountController),
-    _buildPayTypeDropdown(),
-  ]);
-}
+  Widget _buildPaymentDetailsSection() {
+    return _buildDetailsCard('Payment Details', [
+      _buildTextField('Total Amount', _formController.totalAmountController),
+      _buildTextField('Discount', _formController.discountController),
+      _buildTextField(
+          'Fitting Charges', _formController.fittingChargesController),
+      _buildTextField('Grand Total', _formController.grandTotalController),
+      _buildTextField('Advance Paid', _formController.advancePaidController),
+      _buildTextField(
+          'Balance Amount', _formController.balanceAmountController),
+      _buildPayTypeDropdown(),
+    ]);
+  }
 
-Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 2),
-    child: TextField(
-      controller: controller,
+  Widget _buildTextField(String label, TextEditingController controller,
+      {int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+          contentPadding:
+              EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
+          isDense: true,
+        ),
+        maxLines: maxLines,
+        style: TextStyle(fontSize: 14),
+      ),
+    );
+  }
+
+  Widget _buildPayTypeDropdown() {
+    String? selectedPayType;
+    // Assuming _formController.payTypeController is a TextEditingController
+    // You would convert the text controller to a string for the dropdown or manage the state of the dropdown separately
+    return DropdownButtonFormField<String>(
+      value: selectedPayType,
       decoration: InputDecoration(
-        labelText: label,
+        labelText: 'Pay Type',
         border: OutlineInputBorder(),
         contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
         isDense: true,
       ),
-      maxLines: maxLines,
-      style: TextStyle(fontSize: 14),
-    ),
-  );
-}
-
-Widget _buildPayTypeDropdown() {
-  String? selectedPayType;
-  // Assuming _formController.payTypeController is a TextEditingController
-  // You would convert the text controller to a string for the dropdown or manage the state of the dropdown separately
-  return DropdownButtonFormField<String>(
-    value: selectedPayType,
-    decoration: InputDecoration(
-      labelText: 'Pay Type',
-      border: OutlineInputBorder(),
-      contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
-      isDense: true,
-    ),
-    items: ['Cash', 'Card'].map((String value) {
-      return DropdownMenuItem<String>(
-        value: value,
-        child: Text(value),
-      );
-    }).toList(),
-    onChanged: (newValue) {
-      // Update the selected pay type state
-      selectedPayType = newValue;
-      // If you are using a controller for pay type, you can update it here
-      // _formController.payTypeController.text = newValue ?? '';
-    },
-  );
-}
-
-
-
-
-
+      items: ['Cash', 'Card'].map((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
+      onChanged: (newValue) {
+        // Update the selected pay type state
+        selectedPayType = newValue;
+        // If you are using a controller for pay type, you can update it here
+        // _formController.payTypeController.text = newValue ?? '';
+      },
+    );
+  }
 
   Widget _buildDetailsCard(String title, List<Widget> children) {
     return Card(
@@ -1179,25 +1244,34 @@ Widget _buildPayTypeDropdown() {
       ),
     );
   }
-  
 
-  Widget _buildDatePickerField(String label) {
+  Widget _buildDatePickerField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: GestureDetector(
-        onTap: () => _selectDate(context),
+        onTap: () async {
+          final DateTime? pickedDate = await showDatePicker(
+            context: context,
+            initialDate: DateTime.now(),
+            firstDate: DateTime(2000),
+            lastDate: DateTime(2101),
+          );
+          if (pickedDate != null) {
+            // Update the controller's text with the formatted date
+            controller.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+          }
+        },
         child: AbsorbPointer(
           child: TextFormField(
+            controller: controller,
             decoration: InputDecoration(
               labelText: label,
               border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(
-                  vertical: 8.0, horizontal: 10.0), // Smaller padding
-              isDense: true, // Added to reduce the height
+              // Adjusted content padding and isDense
+              contentPadding:
+                  EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
             ),
-            controller: TextEditingController(
-                text: _selectedDate.toLocal().toString().split(' ')[0]),
-            style: TextStyle(fontSize: 12), // Smaller font size
+            style: TextStyle(fontSize: 14), // Adjusted font size
           ),
         ),
       ),

@@ -13,12 +13,20 @@ class FormController {
   TextEditingController balanceAmountController = TextEditingController();
   TextEditingController quantityController = TextEditingController();
   TextEditingController priceController = TextEditingController();
-  // final TextEditingController _quantityController = TextEditingController(text: "1");
+  
+  // Private controllers
+  TextEditingController _invoiceDateController = TextEditingController();
+  TextEditingController _deliveryDateController = TextEditingController();
+  TextEditingController _salesPersonController = TextEditingController();
 
-  // Add other controllers if needed
+  // Public getters for private controllers
+  TextEditingController get invoiceDateController => _invoiceDateController;
+  TextEditingController get deliveryDateController => _deliveryDateController;
+  TextEditingController get salesPersonController => _salesPersonController;
 
-  // You can also add validation logic or getters to access controller values here
+   int? customerId;
 
+  // Dispose method to clean up controllers
   void dispose() {
     mobileNumberController.dispose();
     fullNameController.dispose();
@@ -30,9 +38,10 @@ class FormController {
     grandTotalController.dispose();
     advancePaidController.dispose();
     balanceAmountController.dispose();
-     quantityController.dispose();
+    quantityController.dispose();
     priceController.dispose();
-    // _quantityController.dispose();
-    // Dispose other controllers
+    _invoiceDateController.dispose();
+    _deliveryDateController.dispose();
+    _salesPersonController.dispose();
   }
 }
