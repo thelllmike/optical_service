@@ -14,6 +14,7 @@ class FormController {
   TextEditingController quantityController = TextEditingController();
   TextEditingController priceController = TextEditingController();
   
+
   // Private controllers
   TextEditingController _invoiceDateController = TextEditingController();
   TextEditingController _deliveryDateController = TextEditingController();
@@ -43,5 +44,6 @@ class FormController {
     _invoiceDateController.dispose();
     _deliveryDateController.dispose();
     _salesPersonController.dispose();
+ 
   }
 }

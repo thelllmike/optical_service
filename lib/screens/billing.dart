@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart';
 import 'package:optical_desktop/requesthadleing/customer.dart';
 import 'package:optical_desktop/requesthadleing/deliverydate.dart';
+import 'package:optical_desktop/requesthadleing/Prescription.dart';
 import 'package:optical_desktop/controller/FormController.dart';
 import 'package:intl/intl.dart';
 
@@ -75,6 +76,18 @@ class _BillScreenState extends State<BillScreen> {
   // String? selectedLensCategory;
   String? _selectedCoating;
   String? _selectedPower;
+
+  Map<String, String> _formData = {
+  'R_SPH': '',
+  'R_CYL': '',
+  'R_AXIS': '',
+  'R_ADD': '',
+  'L_SPH': '',
+  'L_CYL': '',
+  'L_AXIS': '',
+  'L_ADD': '',
+};
+
 
   bool isLoadingPowers = false;
 
@@ -571,47 +584,64 @@ void _submitCustomerForm() async {
       gender: gender,
     );
 
-    if (customerId != null) {
-      // Now that the customer is saved, submit the delivery date service with this customer ID
-      _formController.customerId = customerId; // Make sure your form controller can store the customerId
-      await _submitForm(); // This method now uses the updated _formController.customerId
+     if (customerId != null) {
+      _formController.customerId = customerId;
+      bool billingSuccess = await _submitForm(); // Assumes billing submission is updated to return success status
+      if (billingSuccess) {
+        _submitPrescriptionDetails(customerId); // Submit prescription details
+      } else {
+        print('Failed to submit billing details.');
+      }
     } else {
-      // Handle submission failure (e.g., showing an error dialog)
       print('Failed to submit customer details.');
     }
   } catch (e) {
-    // Handle any errors that occur during submission
     print('An error occurred while submitting the form: $e');
   }
 }
 
+// Accept customerId as a parameter
+void _submitPrescriptionDetails(int customerId) async {
+  Prescription newPrescription = Prescription(
+    customer_id: customerId, // Use the passed customerId
+    rightSph: _formData['R_SPH']!,
+    rightCyl: _formData['R_CYL']!,
+    rightAxis: _formData['R_AXIS']!,
+    rightAdd: _formData['R_ADD']!,
+    leftSph: _formData['L_SPH']!,
+    leftCyl: _formData['L_CYL']!,
+    leftAxis: _formData['L_AXIS']!,
+    leftAdd: _formData['L_ADD']!,
+ 
+  );
 
-
-  Future<void> _submitForm() async {
-  String invoiceDate = _formController.invoiceDateController.text;
-  String deliveryDate = _formController.deliveryDateController.text;
-  String salesPerson = _formController.salesPersonController.text;
-
-  // Check if customerId is not null
-  if (_formController.customerId != null) {
-    bool success = await DeliveryDateService.submitBilling(
-      invoiceDate: invoiceDate,
-      deliveryDate: deliveryDate,
-      salesPerson: salesPerson,
-      customerId: _formController.customerId!, // Use the customerId with non-null assertion
-      // Additional fields as necessary
-    );
-
-    if (success) {
-      // Implement success logic
-    } else {
-      // Implement failure logic
-    }
+  bool result = await PrescriptionService.submitPrescription(prescription: newPrescription);
+  if (result) {
+    print("Prescription submitted successfully");
   } else {
-    // Handle the case where customerId is null
-    // Maybe show an error message or log an error
+    print("Failed to submit prescription");
   }
 }
+
+
+
+Future<bool> _submitForm() async {
+  if (_formController.customerId == null) {
+    print('Customer ID is null. Cannot proceed with billing submission.');
+    return false;
+  }
+
+  // Assuming this method now returns a bool indicating success/failure
+  return await DeliveryDateService.submitBilling(
+    invoiceDate: _formController.invoiceDateController.text,
+    deliveryDate: _formController.deliveryDateController.text,
+    salesPerson: _formController.salesPersonController.text,
+    customerId: _formController.customerId!,
+  );
+}
+
+
+
 
   bool _validateForm(String mobileNumber, String fullName, String nicNumber,
       String address, String gender) {
@@ -733,21 +763,29 @@ void _submitCustomerForm() async {
     ]);
   }
 
-  Widget _buildEditableCell(String key) {
-    // Create a controller if it doesn't exist
-    _controllers.putIfAbsent(key, () => TextEditingController());
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextFormField(
-        controller: _controllers[key],
-        decoration: InputDecoration(
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+ 
+Widget _buildEditableCell(String key) {
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: TextField(
+      decoration: InputDecoration(
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue, width: 2.0),
         ),
       ),
-    );
-  }
+      onChanged: (value) {
+        setState(() {
+          _formData[key] = value;
+        });
+      },
+    ),
+  );
+}
+
+
 
   Widget _buildCustomerDetailsSection() {
     return _buildDetailsCard('Customer Details', [
@@ -1107,6 +1145,7 @@ void _submitCustomerForm() async {
   }
 
 // This method builds the editable table for the prescription details
+///billing/customers/{customer_id}/prescriptions
   Widget _buildEditableTable() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -1137,6 +1176,9 @@ void _submitCustomerForm() async {
       ),
     );
   }
+
+
+
 
 //description table
 
