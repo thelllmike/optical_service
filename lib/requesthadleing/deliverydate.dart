@@ -4,30 +4,51 @@ import 'package:http/http.dart' as http;
 class DeliveryDateService {
   static const String _baseUrl = 'http://localhost:8001';
 
-  static Future<bool> submitBilling({
+  // Updating the return type to a more specific Future that returns a custom class or map
+  static Future<Map<String, dynamic>> submitBilling({
     required String invoiceDate,
     required String deliveryDate,
     required String salesPerson,
-    required int customerId, // Add this line to accept customer_id
-    // Additional fields as necessary
+    required int customerId,
   }) async {
-    final uri = Uri.parse('$_baseUrl/billing/billings');
-    final response = await http.post(uri,
+    final Uri uri = Uri.parse('$_baseUrl/billing/billings');
+///billing/billings/items
+    // Validate input parameters here if necessary
+    if (invoiceDate.isEmpty || deliveryDate.isEmpty || salesPerson.isEmpty || customerId <= 0) {
+      return {'success': false, 'error': 'Invalid input parameters'};
+    }
+
+    try {
+      final response = await http.post(
+        uri,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'invoice_date': invoiceDate,
           'delivery_date': deliveryDate,
           'sales_person': salesPerson,
-          'customer_id': customerId, // Add this line to include customer_id in the request body
-          // Other fields as necessary
-        }));
+          'customer_id': customerId,
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      // Handle success
-      return true;
-    } else {
-      // Handle failure
-      return false;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final billingId = data['id'];
+        if (billingId != null) {
+          return {
+            'success': true,
+            'billingId': billingId is int ? billingId : int.tryParse(billingId.toString()),
+          };
+        } else {
+          return {'success': false, 'error': 'Billing ID not found in the response'};
+        }
+      } else {
+        return {
+          'success': false,
+          'error': 'Failed to submit billing information (Status Code: ${response.statusCode}): ${response.body}'
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Exception when submitting billing information: $e'};
     }
   }
 }

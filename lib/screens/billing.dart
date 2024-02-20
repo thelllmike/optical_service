@@ -5,6 +5,7 @@ import 'package:optical_desktop/screens/sidebar/sidebar.dart';
 import 'package:optical_desktop/requesthadleing/customer.dart';
 import 'package:optical_desktop/requesthadleing/deliverydate.dart';
 import 'package:optical_desktop/requesthadleing/Prescription.dart';
+import 'package:optical_desktop/requesthadleing/billing_items.dart';
 import 'package:optical_desktop/controller/FormController.dart';
 import 'package:intl/intl.dart';
 
@@ -129,22 +130,28 @@ class _BillScreenState extends State<BillScreen> {
   }
 
   void _calculateAndDisplayTotalPrice() {
-    if (_selectedCategory != null &&
-        _selectedCoating != null &&
-        _selectedPower != null &&
-        _selectedPower!.isNotEmpty) {
-      fetchLensPriceBySelection(
-        category: _selectedCategory!,
-        coating: _selectedCoating!,
-        power: double.tryParse(_selectedPower!) ?? 0.0,
-        branchId: globals.branch_id,
-      ).then((priceString) {
-        setState(() {
-          _lensPrice = double.tryParse(priceString) ?? 0.0;
-        });
+  if (_selectedCategory != null &&
+      _selectedCoating != null &&
+      _selectedPower != null &&
+      _selectedPower!.isNotEmpty) {
+    fetchLensPriceBySelection(
+      category: _selectedCategory!,
+      coating: _selectedCoating!,
+      power: double.tryParse(_selectedPower!) ?? 0.0,
+      branchId: globals.branch_id,
+    ).then((result) {
+      setState(() {
+        if (result.containsKey('price')) {
+          _lensPrice = double.tryParse(result['price']) ?? 0.0;
+        } else {
+          // Handle error or default case
+          _lensPrice = 0.0;
+        }
       });
-    }
+    });
   }
+}
+
 
   ///lensdropdown/onlycategory
   Future<List<String>> fetchLensCategories(int branch_id) async {
@@ -284,37 +291,40 @@ class _BillScreenState extends State<BillScreen> {
   }
 
 //fetch by categoty ,coating an dpower
+Future<Map<String, dynamic>> fetchLensPriceBySelection({
+  required String category,
+  required String coating,
+  required double power,
+  required int branchId,
+}) async {
+  final uri = Uri.parse('http://localhost:8001/lensdropdown/lens-price-by-selection')
+      .replace(queryParameters: {
+    'category': category,
+    'coating': coating,
+    'power': power.toString(),
+    'branch_id': branchId.toString(),
+  });
 
-  Future<String> fetchLensPriceBySelection({
-    required String category,
-    required String coating,
-    required double power,
-    required int branchId,
-  }) async {
-    final uri =
-        Uri.parse('http://localhost:8001/lensdropdown/lens-price-by-selection')
-            .replace(queryParameters: {
-      'category': category,
-      'coating': coating,
-      'power': power.toString(),
-      'branch_id': branchId.toString(),
-    });
-
-    try {
-      final response = await http.get(uri);
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        return jsonResponse['price']
-            .toString(); // Assuming 'price' is a key in the response JSON
-      } else {
-        print('Error fetching price: ${response.statusCode}');
-        return "Error fetching price";
-      }
-    } catch (e) {
-      print('Exception when fetching price: $e');
-      return "Error fetching price";
+  try {
+    final response = await http.get(uri);
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      return {
+        'lensId': jsonResponse['id'],
+        'price': jsonResponse['price'].toString(),
+      };
+    } else {
+      print('Error fetching price: ${response.statusCode}');
+      // Return an error map or default values
+      return {'error': 'Error fetching price', 'lens_id': 0, 'price': '0.0'};
     }
+  } catch (e) {
+    print('Exception when fetching price: $e');
+    // Return an error map or default values
+    return {'error': 'Exception when fetching price', 'lens_id': 0, 'price': '0.0'};
   }
+}
+
 
   ///dropdown/models-by-selection
 
@@ -478,34 +488,53 @@ class _BillScreenState extends State<BillScreen> {
     }
   }
 
-  Future<String> fetchPriceBySelection(String frame, String brand, String size,
-      String color, String model) async {
-    // Construct the URL with the branch_id query parameter
-    final queryParameters = {
-      'frame': frame,
-      'brand': brand,
-      'size': size,
-      'color': color,
-      'model': model,
-      'branch_id': globals.branch_id
-          .toString(), // Converting int to String to be used in URL
-    };
-    final uri = Uri.http(
-        'localhost:8001', '/dropdown/price-by-selection', queryParameters);
 
+
+Future<Map<String, String>> fetchPriceBySelection(String frame, String brand, String size,
+    String color, String model) async {
+  // Construct the URL with the branch_id query parameter
+  final queryParameters = {
+    'frame': frame,
+    'brand': brand,
+    'size': size,
+    'color': color,
+    'model': model,
+    'branch_id': globals.branch_id.toString(), // Assuming globals.branch_id is an int
+  };
+  final uri = Uri.http(
+      'localhost:8001', '/dropdown/price-by-selection', queryParameters);
+
+  try {
     var response = await http.get(uri);
 
     if (response.statusCode == 200) {
       var jsonResponse = jsonDecode(response.body);
+      // Assuming 'id' is also a key in the jsonResponse
       String priceString = jsonResponse['price'].toString();
-      print("Price received: $priceString"); // Print the received price
-      return priceString;
+      String idString = jsonResponse['id'].toString();
+      print("Price and ID received: $priceString, $idString"); // Print the received data
+      return {
+        'frameId': idString,
+        'price': priceString,
+      };
     } else {
       // Handle the error; maybe show a message to the user
-      print("Error fetching price: ${response.body}");
-      return "Error fetching price";
+      print("Error fetching data: ${response.body}");
+      return {
+        'error': "Error fetching data",
+        'errorMessage': response.body,
+      };
     }
+  } catch (e) {
+    print("Exception caught: $e");
+    return {
+      'error': "Exception caught",
+      'errorMessage': e.toString(),
+    };
   }
+}
+
+
 
 Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
   final DateTime? pickedDate = await showDatePicker(
@@ -559,22 +588,18 @@ Future<void> _selectDate(BuildContext context, TextEditingController controller)
   }
 
 void _submitCustomerForm() async {
-  // Collecting the form data from the text editing controllers
   String mobileNumber = _formController.mobileNumberController.text.trim();
   String fullName = _formController.fullNameController.text.trim();
   String nicNumber = _formController.nicNumberController.text.trim();
   String address = _formController.addressController.text.trim();
-  String gender = _selectedGender ?? 'Not Specified'; // Assuming _selectedGender is managed outside the FormController
+  String gender = _selectedGender ?? 'Not Specified';
 
-  // Assuming you have a method to validate your form fields
   bool isValid = _validateForm(mobileNumber, fullName, nicNumber, address, gender);
   if (!isValid) {
-    // Handle invalid form data (e.g., show error messages)
     print('Form validation failed.');
     return;
   }
 
-  // If the form is valid, proceed with the submission
   try {
     int? customerId = await CustomerPostService.postCustomerDetails(
       mobileNumber: mobileNumber,
@@ -584,21 +609,69 @@ void _submitCustomerForm() async {
       gender: gender,
     );
 
-     if (customerId != null) {
-      _formController.customerId = customerId;
-      bool billingSuccess = await _submitForm(); // Assumes billing submission is updated to return success status
-      if (billingSuccess) {
-        _submitPrescriptionDetails(customerId); // Submit prescription details
-      } else {
-        print('Failed to submit billing details.');
-      }
-    } else {
+    if (customerId == null) {
       print('Failed to submit customer details.');
+      return;
     }
+
+    _formController.customerId = customerId;
+    var billingResult = await _submitForm();
+     // Finally, submit prescription details if needed
+    _submitPrescriptionDetails(customerId);
+
+    int? billingId = billingResult['billingId'];
+    if (billingId == null) {
+      print('Billing ID not found.');
+      return;
+    }
+
+//here need to update 
+  
+    // Fetch frame ID
+    var frameResult = await fetchPriceBySelection(
+      selectedFrame!, selectedBrand!, selectedSize!, selectedColor!, selectedModel!
+    ); // Ensure this method correctly handles null and type issues
+
+    int? frameId = int.tryParse(frameResult['frameId']?.toString() ?? '');
+    if (frameId == null) {
+      print('Failed to parse frameId.');
+      return;
+    }
+
+    // Fetch lens ID
+    var lensResult = await fetchLensPriceBySelection(
+      category: _selectedCategory!,
+      coating: _selectedCoating!,
+      power: double.tryParse(_selectedPower!) ?? 0.0,
+      branchId: globals.branch_id,
+    ); // Ensure this method correctly handles null and type issues
+
+    int? lensId = int.tryParse(lensResult['lensId']?.toString() ?? '');
+    if (lensId == null) {
+      print('Failed to parse lensId.');
+      return;
+    }
+
+    // Assume both frameQty and lensQty are correctly parsed as integers
+    int frameQty = int.tryParse(_formController.frameQuantityController.text) ?? 1;
+    int lensQty = int.tryParse(_quantityController.text) ?? 1;
+
+    // Submit the billing item with obtained IDs
+    await submitBillingItem(
+      billingId: billingId,
+      lensId: lensId,
+      frameId: frameId,
+      frameQty: frameQty,
+      lensQty: lensQty,
+    );
+
+   
   } catch (e) {
     print('An error occurred while submitting the form: $e');
   }
 }
+
+
 
 // Accept customerId as a parameter
 void _submitPrescriptionDetails(int customerId) async {
@@ -625,20 +698,30 @@ void _submitPrescriptionDetails(int customerId) async {
 
 
 
-Future<bool> _submitForm() async {
+Future<Map<String, dynamic>> _submitForm() async {
   if (_formController.customerId == null) {
     print('Customer ID is null. Cannot proceed with billing submission.');
-    return false;
+    return {'success': false, 'message': 'Customer ID is null', 'billingId': null};
   }
 
-  // Assuming this method now returns a bool indicating success/failure
-  return await DeliveryDateService.submitBilling(
-    invoiceDate: _formController.invoiceDateController.text,
-    deliveryDate: _formController.deliveryDateController.text,
-    salesPerson: _formController.salesPersonController.text,
+  var result = await DeliveryDateService.submitBilling(
+    invoiceDate: _formController.invoiceDateController.text.trim(),
+    deliveryDate: _formController.deliveryDateController.text.trim(),
+    salesPerson: _formController.salesPersonController.text.trim(),
     customerId: _formController.customerId!,
   );
+
+  if (result['success'] == true) {
+    int? billingId = int.tryParse(result['billingId'].toString());
+    // Log or use billingId as required
+    print("Billing submission successful with ID: $billingId");
+    return {'success': true, 'message': 'Billing submission successful', 'billingId': billingId};
+  } else {
+    print(result['error'] ?? 'Unknown error occurred during billing submission.');
+    return {'success': false, 'message': result['error'] ?? 'Error during billing submission', 'billingId': null};
+  }
 }
+
 
 
 
@@ -833,38 +916,40 @@ Widget _buildEditableCell(String key) {
       ),
     );
   }
-
-  Widget _buildQuantityField(String label, {int maxLines = 1}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: TextField(
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(),
-          contentPadding:
-              EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
-          isDense: true,
-        ),
-        maxLines: maxLines,
-        onChanged: (quantity) {
-          int qty = 1;
-          if (quantity.isNotEmpty) {
-            try {
-              qty = int.parse(quantity);
-            } catch (e) {
-              // Handle error for invalid input (e.g., non-numeric input)
-            }
-          }
-          setState(() {
-            totalPrice =
-                qty * selectedPrice; // Calculate and update total price
-          });
-        },
-        style: TextStyle(fontSize: 14),
+//quntity frame
+Widget _buildQuantityField(String label, {int maxLines = 1}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 2),
+    child: TextField(
+      controller: _formController.frameQuantityController, // Corrected reference
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
+        isDense: true,
       ),
-    );
-  }
+      maxLines: maxLines,
+      onChanged: (quantity) {
+        int qty = 1;
+        if (quantity.isNotEmpty) {
+          try {
+            qty = int.parse(quantity);
+          } catch (e) {
+            // Handle error for invalid input
+          }
+        }
+        setState(() {
+          totalPrice = qty * selectedPrice; // Calculate and update total price
+        });
+      },
+      style: TextStyle(fontSize: 14),
+    ),
+  );
+}
+
+
+
 
   Widget _buildFrameDetailsSection() {
     return _buildDetailsCard('Frame Details', [
@@ -952,27 +1037,28 @@ Widget _buildEditableCell(String key) {
 
       // Model Dropdown
       _buildDropdownField(
-        'Model',
-        models,
-        value: selectedModel,
-        onSelected: (newValue) async {
-          setState(() {
-            selectedModel = newValue;
-          });
-          // Fetch and set price for the selected model
-          if (selectedFrame != null &&
-              selectedBrand != null &&
-              selectedSize != null &&
-              selectedColor != null) {
-            String priceString = await fetchPriceBySelection(selectedFrame!,
-                selectedBrand!, selectedSize!, selectedColor!, newValue);
-            setState(() {
-              selectedPrice = double.tryParse(priceString) ?? 0.0;
-            });
-          }
-        },
-      ),
-
+  'Model',
+  models,
+  value: selectedModel,
+  onSelected: (newValue) async {
+    setState(() {
+      selectedModel = newValue;
+    });
+    // Fetch and set price for the selected model
+    if (selectedFrame != null &&
+        selectedBrand != null &&
+        selectedSize != null &&
+        selectedColor != null) {
+      var result = await fetchPriceBySelection(selectedFrame!,
+          selectedBrand!, selectedSize!, selectedColor!, newValue);
+      // Since fetchPriceBySelection now returns a Map, we extract the price string
+      String priceString = result['price'] ?? "0.0"; // Default to "0.0" if not found
+      setState(() {
+        selectedPrice = double.tryParse(priceString) ?? 0.0;
+      });
+    }
+  },
+),
       _buildQuantityField('Quantity'),
 
       // Price TextField (read-only, displaying calculated price)
@@ -1176,7 +1262,6 @@ Widget _buildEditableCell(String key) {
       ),
     );
   }
-
 
 
 

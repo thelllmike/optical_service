@@ -13,7 +13,7 @@ class FormController {
   TextEditingController balanceAmountController = TextEditingController();
   TextEditingController quantityController = TextEditingController();
   TextEditingController priceController = TextEditingController();
-  
+  TextEditingController frameQuantityController = TextEditingController();
 
   // Private controllers
   TextEditingController _invoiceDateController = TextEditingController();
@@ -25,7 +25,7 @@ class FormController {
   TextEditingController get deliveryDateController => _deliveryDateController;
   TextEditingController get salesPersonController => _salesPersonController;
 
-   int? customerId;
+  int? customerId;
 
   // Dispose method to clean up controllers
   void dispose() {
@@ -44,6 +44,6 @@ class FormController {
     _invoiceDateController.dispose();
     _deliveryDateController.dispose();
     _salesPersonController.dispose();
- 
+    frameQuantityController.dispose();
   }
 }
