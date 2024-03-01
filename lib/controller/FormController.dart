@@ -15,19 +15,43 @@ class FormController {
   TextEditingController priceController = TextEditingController();
   TextEditingController frameQuantityController = TextEditingController();
 
-  // Private controllers
   TextEditingController _invoiceDateController = TextEditingController();
   TextEditingController _deliveryDateController = TextEditingController();
   TextEditingController _salesPersonController = TextEditingController();
+
+  int? customerId;
+
+  int? billingId;
+
+  FormController() {
+    // Add listeners to controllers that affect calculations
+    totalAmountController.addListener(calculateTotals);
+    discountController.addListener(calculateTotals);
+    fittingChargesController.addListener(calculateTotals);
+    advancePaidController.addListener(calculateTotals);
+    // You can add more listeners if any other fields affect the calculation
+  }
 
   // Public getters for private controllers
   TextEditingController get invoiceDateController => _invoiceDateController;
   TextEditingController get deliveryDateController => _deliveryDateController;
   TextEditingController get salesPersonController => _salesPersonController;
 
-  int? customerId;
+  void calculateTotals() {
+    double totalAmount = double.tryParse(totalAmountController.text) ?? 0;
+    double discount = double.tryParse(discountController.text) ?? 0;
+    double fittingCharges = double.tryParse(fittingChargesController.text) ?? 0;
+    double advancePaid = double.tryParse(advancePaidController.text) ?? 0;
 
-  // Dispose method to clean up controllers
+    // Calculate grand total
+    double grandTotal = (totalAmount - discount + fittingCharges);
+    grandTotalController.text = grandTotal.toStringAsFixed(2);
+
+    // Calculate balance amount
+    double balanceAmount = grandTotal - advancePaid;
+    balanceAmountController.text = balanceAmount.toStringAsFixed(2);
+  }
+
   void dispose() {
     mobileNumberController.dispose();
     fullNameController.dispose();
@@ -41,9 +65,9 @@ class FormController {
     balanceAmountController.dispose();
     quantityController.dispose();
     priceController.dispose();
+    frameQuantityController.dispose();
     _invoiceDateController.dispose();
     _deliveryDateController.dispose();
     _salesPersonController.dispose();
-    frameQuantityController.dispose();
   }
 }

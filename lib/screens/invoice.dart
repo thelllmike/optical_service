@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:optical_desktop/requesthadleing/invoice.dart';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart'; // Ensure this path is correct
-
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:optical_desktop/global.dart' as globals;
 
 class MyApp extends StatelessWidget {
   @override
@@ -22,6 +25,7 @@ class InvoiceScreen extends StatefulWidget {
 class _InvoiceScreenState extends State<InvoiceScreen> {
   DateTime selectedStartDate = DateTime.now();
   DateTime selectedEndDate = DateTime.now();
+    Future<List<Invoice>>? futureInvoices; // Declare futureInvoices here
 
   Future<void> _selectDate(BuildContext context, bool isStart) async {
     DateTime initialDate = isStart ? selectedStartDate : selectedEndDate;
@@ -52,8 +56,29 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       });
     }
   }
+   @override
+  void initState() {
+    super.initState();
+     int branchId = globals.branch_id; // Example of getting branchId from a global variable
+  futureInvoices = fetchInvoices(branchId);
+  }
+///Quary/billing-details
+Future<List<Invoice>> fetchInvoices(int branchId) async {
+  final uri = Uri.parse('http://localhost:8001/Quary/billing-details')
+      .replace(queryParameters: {'branch_id': branchId.toString()});
+  final response = await http.get(uri);
 
-  @override
+  if (response.statusCode == 200) {
+    List<dynamic> data = json.decode(response.body);
+    return data.map((json) => Invoice.fromJson(json)).toList();
+  } else {
+    throw Exception('Failed to load invoices for branch ID $branchId');
+  }
+}
+
+
+
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -61,7 +86,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       ),
       body: Row(
         children: <Widget>[
-          Sidebar(), // Sidebar widget
+          Sidebar(),
           VerticalDivider(thickness: 1, width: 1),
           Expanded(
             child: Padding(
@@ -69,46 +94,68 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => _selectDate(context, true),
-                          child: Text('Start Date: ${DateFormat('yyyy-MM-dd').format(selectedStartDate)}'),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => _selectDate(context, false),
-                          child: Text('End Date: ${DateFormat('yyyy-MM-dd').format(selectedEndDate)}'),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Implement search logic
-                        },
-                        child: Text('Search'),
-                      ),
-                    ],
+                  // Date selection and search button...
+
+                  FutureBuilder<List<Invoice>>(
+                    future: futureInvoices,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text("Error: ${snapshot.error}");
+                      } else {
+                        return Expanded(
+                          child:DataTable(
+  columns: const <DataColumn>[
+    DataColumn(label: Text('Date')),
+    DataColumn(label: Text('Customer Name')),
+    DataColumn(label: Text('Mobile Number')),
+    DataColumn(label: Text('Sales Person')),
+    DataColumn(label: Text('Lens Category')),
+    DataColumn(label: Text('Frame Brand')),
+    DataColumn(label: Text('Advance Paid')),
+    DataColumn(label: Text('Grand Total')),
+    DataColumn(label: Text('Balance Amount')),
+    DataColumn(label: Text('Pay Type')),
+    DataColumn(label: Text('Action')), // This column is for your actions like edit/delete
+  ],
+   rows: snapshot.data!.map<DataRow>((invoice) => DataRow(
+  cells: <DataCell>[
+    DataCell(Text(invoice.invoiceDate)),
+    DataCell(Text(invoice.customerName)),
+    DataCell(Text(invoice.mobileNumber)),
+    DataCell(Text(invoice.salesPerson)),
+    DataCell(Text(invoice.lensCategory)),
+    DataCell(Text(invoice.frameBrand)),
+    DataCell(Text('${invoice.advancePaid}')), // Assuming advancePaid is a numeric type
+    DataCell(Text('${invoice.grandTotal}')),  // Assuming grandTotal is a numeric type
+    DataCell(Text('${invoice.balanceAmount}')), // Assuming balanceAmount is a numeric type
+    DataCell(Text(invoice.payType)),
+    DataCell(Row(
+      children: <Widget>[
+        IconButton(
+          icon: Icon(Icons.edit),
+          onPressed: () {
+            // TODO: Implement your edit action
+          },
+        ),
+        IconButton(
+          icon: Icon(Icons.delete),
+          onPressed: () {
+            // TODO: Implement your delete action
+          },
+        ),
+      ],
+    )), // Action buttons for each row
+  ],
+)).toList(),
+
+                          ),
+                        );
+                      }
+                    },
                   ),
-                  Expanded(
-                    child: DataTable(
-                      columns: const <DataColumn>[
-                        DataColumn(label: Text('Date')),
-                        DataColumn(label: Text('Mobile Number')),
-                        DataColumn(label: Text('Customer Name')),
-                        DataColumn(label: Text('Advance')),
-                        DataColumn(label: Text('Lens Cost')),
-                        DataColumn(label: Text('Frame Cost')),
-                        DataColumn(label: Text('Total')),
-                        DataColumn(label: Text('Action')),
-                      ],
-                      rows: const <DataRow>[
-                        // Populate data rows with actual data
-                      ],
-                    ),
-                  ),
-                  ElevatedButton(
+                    ElevatedButton(
                     onPressed: () {
                       // Implement generate invoice logic
                     },
