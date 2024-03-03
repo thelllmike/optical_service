@@ -77,15 +77,16 @@ class PrintHelper {
               cellHeight: 40,
               headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: ttf),
               cellStyle: pw.TextStyle(font: ttf),
-              headers: ['PD', 'SH', 'SPH', 'CYL', 'AXIS', 'ADD'],
-              data: prescriptionDetails.map((detail) => [
-                detail['PD'].toString(),
-                detail['SH'].toString(),
-                detail['SPH'].toString(),
-                detail['CYL'].toString(),
-                detail['AXIS'].toString(),
-                detail['ADD'].toString(),
-              ]).toList(),
+              headers: ['Eye', 'PD', 'SPH', 'CYL', 'AXIS', 'ADD'],
+            data: prescriptionDetails.map((detail) => [
+              detail['Eye'].toString(), // Assuming you want to include the 'Eye' column as well
+              detail['PD'].toString(),
+              detail['SPH'].toString(),
+              detail['CYL'].toString(),
+              detail['AXIS'].toString(),
+              detail['ADD'].toString(),
+            ]).toList(),
+
             ),
             pw.Divider(),
             pw.Row(

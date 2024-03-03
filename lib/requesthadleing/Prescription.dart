@@ -4,43 +4,47 @@ import 'package:http/http.dart' as http;
 // Prescription.dart
 
 class Prescription {
-  final int customer_id; // Added based on Swagger example
+  final int customer_id;
+  final String rightPd; // Added right PD
   final String rightSph;
   final String rightCyl;
   final String rightAxis;
+  final String rightAdd;
+  final String leftPd; // Added left PD
   final String leftSph;
   final String leftCyl;
   final String leftAxis;
   final String leftAdd;
-  final String rightAdd;
- 
 
   Prescription({
-    required this.customer_id, // Added
+    required this.customer_id,
+    required this.rightPd, // Added right PD
     required this.rightSph,
     required this.rightCyl,
     required this.rightAxis,
+    required this.rightAdd,
+    required this.leftPd, // Added left PD
     required this.leftSph,
     required this.leftCyl,
     required this.leftAxis,
     required this.leftAdd,
-    required this.rightAdd,
-
   });
 
   Map<String, dynamic> toJson() => {
-        'customer_id': customer_id, // Added
+        'customer_id': customer_id,
+        'right_pd': rightPd, // Added right PD
         'right_sph': rightSph,
         'right_cyl': rightCyl,
         'right_axis': rightAxis,
+        'right_add': rightAdd,
+        'left_pd': leftPd, // Added left PD
         'left_sph': leftSph,
         'left_cyl': leftCyl,
         'left_axis': leftAxis,
         'left_add': leftAdd,
-        'right_add': rightAdd,
-      
       };
 }
+
 
 
 ////billing/prescriptions
