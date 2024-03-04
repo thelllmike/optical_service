@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart';
@@ -10,6 +11,7 @@ import 'package:optical_desktop/requesthadleing/payment_details_service.dart';
 import 'package:optical_desktop/requesthadleing/print.dart';
 import 'package:optical_desktop/controller/FormController.dart';
 import 'package:intl/intl.dart';
+// import 'package:uuid/uuid.dart';
 
 // import 'package:optical_desktop/requesthadleing/lensDropdown.dart';
 import 'package:optical_desktop/global.dart' as globals;
@@ -102,6 +104,8 @@ class _BillScreenState extends State<BillScreen> {
     Item(description: 'Item 1', quantity: 1, unitPrice: 10.0)
   ];
   bool _isSidebarVisible = false;
+  //create random invoice id
+   late String invoiceId;
 
   void _deleteItem(int index) {
     setState(() {
@@ -115,9 +119,18 @@ class _BillScreenState extends State<BillScreen> {
     _fetchFramesData();
     _fetchLensCategories();
     _quantityController.addListener(_onQuantityChanged);
-     _formController.mobileNumberController.addListener(_onMobileNumberSubmitted);
+    _formController.mobileNumberController
+        .addListener(_onMobileNumberSubmitted);
     // _updateTotalAmountDirectly();
+    // invoiceId = _generateInvoiceId(int length);
   }
+
+ String _generateInvoiceId(int length) {
+  const String _chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  Random _rnd = Random();
+  return String.fromCharCodes(Iterable.generate(
+    length, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));
+}
 
   @override
   void dispose() {
@@ -156,12 +169,13 @@ class _BillScreenState extends State<BillScreen> {
       });
     }
   }
+
 //get customer details to the input fields
   void _onMobileNumberSubmitted() {
-  if (_formController.mobileNumberController.text.isNotEmpty) {
-    _fetchCustomerDetails(_formController.mobileNumberController.text);
+    if (_formController.mobileNumberController.text.isNotEmpty) {
+      _fetchCustomerDetails(_formController.mobileNumberController.text);
+    }
   }
-}
 
   ///lensdropdown/onlycategory
   Future<List<String>> fetchLensCategories(int branch_id) async {
@@ -589,8 +603,8 @@ class _BillScreenState extends State<BillScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Handle save & print logic here
-           _submitCustomerForm();
-         
+           invoiceId = _generateInvoiceId(6);
+          _submitCustomerForm();
         },
         child: Icon(Icons.print),
         tooltip: 'Save & Print (F12)',
@@ -600,77 +614,85 @@ class _BillScreenState extends State<BillScreen> {
 
   //print details
 
- void _printBillingDetails() async {
-  final PrintHelper printHelper = PrintHelper();
+  void _printBillingDetails() async {
+    final PrintHelper printHelper = PrintHelper();
 
-  // Gather customer and invoice details
-  String customerName = _formController.fullNameController.text;
-  String customerPhone = _formController.mobileNumberController.text;
-  String invoiceDate = _formController.invoiceDateController.text;
-  String invoiceNumber = '123'; // You might want to generate this programmatically or fetch it from a database
+    // Gather customer and invoice details
+    String customerName = _formController.fullNameController.text;
+    String customerPhone = _formController.mobileNumberController.text;
+    String invoiceDate = _formController.invoiceDateController.text;
+    String invoiceNumber =
+        invoiceId; // You might want to generate this programmatically or fetch it from a database
 
-  // Generate the item details list
-  List<Map<String, dynamic>> itemDetails = items.map((item) => {
-        'description': item.description,
-        'quantity': item.quantity,
-        'unitPrice': item.unitPrice,
-        'total': item.totalAmount,
-      }).toList();
+    // Generate the item details list
+    List<Map<String, dynamic>> itemDetails = items
+        .map((item) => {
+              'description': item.description,
+              'quantity': item.quantity,
+              'unitPrice': item.unitPrice,
+              'total': item.totalAmount,
+            })
+        .toList();
 
-  // Assuming you have a map `_formData` with all prescription fields
-List<Map<String, dynamic>> prescriptionDetails = [
-  {
-    'Eye': 'R',
-    'PD': _formData['R_PD'], // Assuming you have R_PD in your form data for right PD
-    'SPH': _formData['R_SPH'], // Sphere for the right eye
-    'CYL': _formData['R_CYL'], // Cylinder for the right eye
-    'AXIS': _formData['R_AXIS'], // Axis for the right eye
-    'ADD': _formData['R_ADD'], // Addition for the right eye, if applicable
-  },
-  {
-    'Eye': 'L',
-    'PD': _formData['L_PD'], // Assuming you have L_PD in your form data for left PD
-    'SPH': _formData['L_SPH'], // Sphere for the left eye
-    'CYL': _formData['L_CYL'], // Cylinder for the left eye
-    'AXIS': _formData['L_AXIS'], // Axis for the left eye
-    'ADD': _formData['L_ADD'], // Addition for the left eye, if applicable
-  },
-];
+    // Assuming you have a map `_formData` with all prescription fields
+    List<Map<String, dynamic>> prescriptionDetails = [
+      {
+        'Eye': 'R',
+        'PD': _formData[
+            'R_PD'], // Assuming you have R_PD in your form data for right PD
+        'SPH': _formData['R_SPH'], // Sphere for the right eye
+        'CYL': _formData['R_CYL'], // Cylinder for the right eye
+        'AXIS': _formData['R_AXIS'], // Axis for the right eye
+        'ADD': _formData['R_ADD'], // Addition for the right eye, if applicable
+      },
+      {
+        'Eye': 'L',
+        'PD': _formData[
+            'L_PD'], // Assuming you have L_PD in your form data for left PD
+        'SPH': _formData['L_SPH'], // Sphere for the left eye
+        'CYL': _formData['L_CYL'], // Cylinder for the left eye
+        'AXIS': _formData['L_AXIS'], // Axis for the left eye
+        'ADD': _formData['L_ADD'], // Addition for the left eye, if applicable
+      },
+    ];
 
+    try {
+      double total =
+          double.tryParse(_formController.totalAmountController.text) ?? 0.0;
+      double advancePaid =
+          double.tryParse(_formController.advancePaidController.text) ?? 0.0;
 
-  try {
-    double total = double.tryParse(_formController.totalAmountController.text) ?? 0.0;
-    double advancePaid = double.tryParse(_formController.advancePaidController.text) ?? 0.0;
+      // Specify the logo asset path relative to your assets directory
+      String logoAssetPath =
+          'assets/logo.png'; // Ensure this file is included in your pubspec.yaml under assets
 
-    // Specify the logo asset path relative to your assets directory
-    String logoAssetPath = 'assets/logo.png'; // Ensure this file is included in your pubspec.yaml under assets
+      final pdf = await printHelper.generateDocument(
+        logoAssetPath:
+            logoAssetPath, // Updated to use logoAssetPath for clarity
+        branchName: 'Branch Name',
+        branchAddress: 'Branch Address',
+        mobileNumber: 'Branch Phone Number',
+        customerName: customerName,
+        customerPhone: customerPhone,
+        invoiceDate: invoiceDate,
+        invoiceNumber: invoiceNumber,
+        itemDetails: itemDetails,
+        prescriptionDetails: prescriptionDetails,
+        total: total,
+        advancePaid: advancePaid,
+        takenBy: 'Sales',
+      );
 
-    final pdf = await printHelper.generateDocument(
-      logoAssetPath: logoAssetPath, // Updated to use logoAssetPath for clarity
-      branchName: 'Branch Name',
-      branchAddress: 'Branch Address',
-      mobileNumber: 'Branch Phone Number',
-      customerName: customerName,
-      customerPhone: customerPhone,
-      invoiceDate: invoiceDate,
-      invoiceNumber: invoiceNumber,
-      itemDetails: itemDetails,
-      prescriptionDetails: prescriptionDetails,
-      total: total,
-      advancePaid: advancePaid,
-      takenBy: 'Sales',
-    );
+      print("Total: $total, Advance Paid: $advancePaid"); // Debugging
 
-    print("Total: $total, Advance Paid: $advancePaid"); // Debugging
+      String fileName = "Invoice_$invoiceNumber.pdf";
+      await printHelper.printAndSaveDocument(pdf, fileName);
 
-    String fileName = "Invoice_$invoiceNumber.pdf";
-    await printHelper.printAndSaveDocument(pdf, fileName);
-
-    print("Document should have been printed and saved as $fileName");
-  } catch (e) {
-    print("An error occurred while printing or saving the document: $e");
+      print("Document should have been printed and saved as $fileName");
+    } catch (e) {
+      print("An error occurred while printing or saving the document: $e");
+    }
   }
-}
 
   void _submitCustomerForm() async {
     String mobileNumber = _formController.mobileNumberController.text.trim();
@@ -679,31 +701,32 @@ List<Map<String, dynamic>> prescriptionDetails = [
     String address = _formController.addressController.text.trim();
     String gender = _selectedGender ?? 'Not Specified';
 
-  String? validationResult = _validateForm(mobileNumber, fullName, nicNumber, address, gender);
-  if (validationResult != null) {
-    _showValidationAlert(validationResult);
-    return; // Validation failed, stop execution
-  }
- try {
-    // Attempt to fetch existing customer ID based on mobile number
-    int? customerId = await CustomerService.fetchCustomerDetails(mobileNumber);
-
-    if (customerId == null) {
-      // If customer does not exist, attempt to create a new one
-      customerId = await CustomerService.createNewCustomer(
-        mobileNumber: mobileNumber,
-        fullName: fullName,
-        nicNumber: nicNumber,
-        address: address,
-        gender: gender,
-      );
+    String? validationResult =
+        _validateForm(mobileNumber, fullName, nicNumber, address, gender);
+    if (validationResult != null) {
+      _showValidationAlert(validationResult);
+      return; // Validation failed, stop execution
+    }
+    try {
+      // Attempt to fetch existing customer ID based on mobile number
+      int? customerId =
+          await CustomerService.fetchCustomerDetails(mobileNumber);
 
       if (customerId == null) {
-        print('Failed to create new customer.');
-        return; // Stop execution if failed to create new customer
-      }
-    }
+        // If customer does not exist, attempt to create a new one
+        customerId = await CustomerService.createNewCustomer(
+          mobileNumber: mobileNumber,
+          fullName: fullName,
+          nicNumber: nicNumber,
+          address: address,
+          gender: gender,
+        );
 
+        if (customerId == null) {
+          print('Failed to create new customer.');
+          return; // Stop execution if failed to create new customer
+        }
+      }
 
       _formController.customerId = customerId;
       var billingResult = await _submitForm();
@@ -761,28 +784,28 @@ List<Map<String, dynamic>> prescriptionDetails = [
       );
 
       _submitPaymentDetails(billingId);
-       _printBillingDetails();
-     } catch (e) {
-    print('An error occurred while submitting the form: $e');
-  }
+      _printBillingDetails();
+    } catch (e) {
+      print('An error occurred while submitting the form: $e');
+    }
   }
 
 // Accept customerId as a parameter
   void _submitPrescriptionDetails(int customerId) async {
-Prescription newPrescription = Prescription(
-  customer_id: customerId, // Use the passed customerId
-  rightPd: _formData['R_PD']!, // Pupillary Distance for the right eye
-  rightSph: _formData['R_SPH']!, // Sphere for the right eye
-  rightCyl: _formData['R_CYL']!, // Cylinder for the right eye
-  rightAxis: _formData['R_AXIS']!, // Axis for the right eye
-  rightAdd: _formData['R_ADD']!, // Addition for the right eye, if applicable
-  leftPd: _formData['L_PD']!, // Pupillary Distance for the left eye
-  leftSph: _formData['L_SPH']!, // Sphere for the left eye
-  leftCyl: _formData['L_CYL']!, // Cylinder for the left eye
-  leftAxis: _formData['L_AXIS']!, // Axis for the left eye
-  leftAdd: _formData['L_ADD']!, // Addition for the left eye, if applicable
-);
-
+    Prescription newPrescription = Prescription(
+      customer_id: customerId, // Use the passed customerId
+      rightPd: _formData['R_PD']!, // Pupillary Distance for the right eye
+      rightSph: _formData['R_SPH']!, // Sphere for the right eye
+      rightCyl: _formData['R_CYL']!, // Cylinder for the right eye
+      rightAxis: _formData['R_AXIS']!, // Axis for the right eye
+      rightAdd:
+          _formData['R_ADD']!, // Addition for the right eye, if applicable
+      leftPd: _formData['L_PD']!, // Pupillary Distance for the left eye
+      leftSph: _formData['L_SPH']!, // Sphere for the left eye
+      leftCyl: _formData['L_CYL']!, // Cylinder for the left eye
+      leftAxis: _formData['L_AXIS']!, // Axis for the left eye
+      leftAdd: _formData['L_ADD']!, // Addition for the left eye, if applicable
+    );
 
     bool result = await PrescriptionService.submitPrescription(
         prescription: newPrescription);
@@ -867,56 +890,46 @@ Prescription newPrescription = Prescription(
   }
 
 // This function remains focused on validation logic.
-String? _validateForm(String mobileNumber, String fullName, String nicNumber, String address, String gender) {
-  final mobileNumberPattern = RegExp(r'^07[01245678][0-9]{7}$');
-  // final nicNumberPattern = RegExp(r'^[0-9]{9}[vVxX]$');
+  String? _validateForm(String mobileNumber, String fullName, String nicNumber,
+      String address, String gender) {
+    final mobileNumberPattern = RegExp(r'^07[01245678][0-9]{7}$');
+    // final nicNumberPattern = RegExp(r'^[0-9]{9}[vVxX]$');
 
-  if (mobileNumber.isEmpty) {
-    return "Mobile number is required.";
-  } else if (fullName.isEmpty) {
-    return "Full name is required.";
-  } else if (address.isEmpty) {
-    return "Address is required.";
-  } else if (gender.isEmpty) {
-    return "Gender is required.";
+    if (mobileNumber.isEmpty) {
+      return "Mobile number is required.";
+    } else if (fullName.isEmpty) {
+      return "Full name is required.";
+    } else if (address.isEmpty) {
+      return "Address is required.";
+    } else if (gender.isEmpty) {
+      return "Gender is required.";
+    }
+
+    if (!mobileNumberPattern.hasMatch(mobileNumber)) {
+      return "Invalid mobile number format.";
+    }
+    return null;
   }
 
-  if (!mobileNumberPattern.hasMatch(mobileNumber)) {
-    return "Invalid mobile number format.";
+  void _showValidationAlert(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Validation Error"),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
-
-  // if (!nicNumberPattern.hasMatch(nicNumber)) {
-  //   return "Invalid NIC number format.";
-  // }
-
-  // If all checks pass, return null indicating the form is valid
-  return null;
-}
-
-void _showValidationAlert(String message) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text("Validation Error"),
-        content: Text(message),
-        actions: <Widget>[
-          TextButton(
-            child: Text("OK"),
-            onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-
-
-
-
-
 
   Widget _buildDropdownField(String label, List<String> items,
       {String? value, required Function(String) onSelected}) {
@@ -1027,72 +1040,75 @@ void _showValidationAlert(String message) {
     );
   }
 
-Widget _buildCustomerDetailsSection() {
-  return _buildDetailsCard('Customer Details', [
-    _buildCustomerDetailTextField(
-      'Mobile Number', 
-      _formController.mobileNumberController,
-      onSubmitted: (value) => _onMobileNumberSubmitted(),
-    ),
-    _buildCustomerDetailTextField('Full Name', _formController.fullNameController),
-    _buildCustomerDetailTextField('NIC Number', _formController.nicNumberController),
-    _buildCustomerDetailTextField('Address', _formController.addressController, maxLines: 3),
-    _buildGenderDropdown()
-    // Other widgets as needed
-  ]);
-}
+  Widget _buildCustomerDetailsSection() {
+    return _buildDetailsCard('Customer Details', [
+      _buildCustomerDetailTextField(
+        'Mobile Number',
+        _formController.mobileNumberController,
+        onSubmitted: (value) => _onMobileNumberSubmitted(),
+      ),
+      _buildCustomerDetailTextField(
+          'Full Name', _formController.fullNameController),
+      _buildCustomerDetailTextField(
+          'NIC Number', _formController.nicNumberController),
+      _buildCustomerDetailTextField(
+          'Address', _formController.addressController,
+          maxLines: 3),
+      _buildGenderDropdown()
+      // Other widgets as needed
+    ]);
+  }
 
 // Ensure this is defined only once in your codebase
-Widget _buildCustomerDetailTextField(
-  String label,
-  TextEditingController controller, {
-  int maxLines = 1,
-  Function(String)? onSubmitted,
-}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 2),
-    child: TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(fontSize: 16), // Adjusted label font size
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4.0), // Rounded corners for the border
-          borderSide: BorderSide(width: 1), // Adjusted border thickness
+  Widget _buildCustomerDetailTextField(
+    String label,
+    TextEditingController controller, {
+    int maxLines = 1,
+    Function(String)? onSubmitted,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(fontSize: 16), // Adjusted label font size
+          border: OutlineInputBorder(
+            borderRadius:
+                BorderRadius.circular(4.0), // Rounded corners for the border
+            borderSide: BorderSide(width: 1), // Adjusted border thickness
+          ),
+          contentPadding: EdgeInsets.symmetric(
+              vertical: 15.0,
+              horizontal: 20.0), // Adjusted padding inside the text field
         ),
-        contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0), // Adjusted padding inside the text field
+        style: TextStyle(fontSize: 14), // Adjusted text font size
+        maxLines: maxLines,
+        onFieldSubmitted: onSubmitted,
       ),
-      style: TextStyle(fontSize: 14), // Adjusted text font size
-      maxLines: maxLines,
-      onFieldSubmitted: onSubmitted,
-    ),
-  );
-}
-
-
-
-
-///billing/customers/by-phone/{phone_number}
- Future<int?> _fetchCustomerDetails(String mobileNumber) async {
-  final response = await http.get(Uri.parse('http://localhost:8001/billing/customers/by-phone/$mobileNumber'));
-
-  if (response.statusCode == 200) {
-    
-   
-   final data = json.decode(response.body);
-    // Ensure the keys exactly match those in your received JSON data
-    _formController.fullNameController.text = data['full_name'] ?? '';
-    _formController.nicNumberController.text = data['nic_number'] ?? '';
-    _formController.addressController.text = data['address'] ?? '';
-    // Update the UI if needed
-    setState(() {});
-    // Update your gender dropdown based on the response, if necessary
-  } else {
-    print('Customer not found or error fetching customer details.');
-    // return null; // Return null if customer doesn't exist
+    );
   }
-   return null;
-}
+
+  ///billing/customers/by-phone/{phone_number}
+  Future<int?> _fetchCustomerDetails(String mobileNumber) async {
+    final response = await http.get(Uri.parse(
+        'http://localhost:8001/billing/customers/by-phone/$mobileNumber'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      // Ensure the keys exactly match those in your received JSON data
+      _formController.fullNameController.text = data['full_name'] ?? '';
+      _formController.nicNumberController.text = data['nic_number'] ?? '';
+      _formController.addressController.text = data['address'] ?? '';
+      // Update the UI if needed
+      setState(() {});
+      // Update your gender dropdown based on the response, if necessary
+    } else {
+      print('Customer not found or error fetching customer details.');
+      // return null; // Return null if customer doesn't exist
+    }
+    return null;
+  }
 
   Widget _buildGenderDropdown() {
     return DropdownButton<String>(
@@ -1443,43 +1459,42 @@ Widget _buildCustomerDetailTextField(
 
 // This method builds the editable table for the prescription details
   ///billing/customers/{customer_id}/prescriptions
-Widget _buildEditableTable() {
-  return SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    child: DataTable(
-      columns: const [
-        DataColumn(label: Text('Type')),
-        DataColumn(label: Text('SPH')),
-        DataColumn(label: Text('CYL')),
-        DataColumn(label: Text('AXIS')),
-        DataColumn(label: Text('ADD')),
-        // Adding new columns for PD values
-        DataColumn(label: Text('PD')),
-      ],
-      rows: [
-        DataRow(cells: [
-          DataCell(Text('R')),
-          DataCell(_buildEditableCell('R_SPH')),
-          DataCell(_buildEditableCell('R_CYL')),
-          DataCell(_buildEditableCell('R_AXIS')),
-          DataCell(_buildEditableCell('R_ADD')),
-          // Adding a new editable cell for right PD
-          DataCell(_buildEditableCell('R_PD')),
-        ]),
-        DataRow(cells: [
-          DataCell(Text('L')),
-          DataCell(_buildEditableCell('L_SPH')),
-          DataCell(_buildEditableCell('L_CYL')),
-          DataCell(_buildEditableCell('L_AXIS')),
-          DataCell(_buildEditableCell('L_ADD')),
-          // Adding a new editable cell for left PD
-          DataCell(_buildEditableCell('L_PD')),
-        ]),
-      ],
-    ),
-  );
-}
-
+  Widget _buildEditableTable() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columns: const [
+          DataColumn(label: Text('Type')),
+          DataColumn(label: Text('SPH')),
+          DataColumn(label: Text('CYL')),
+          DataColumn(label: Text('AXIS')),
+          DataColumn(label: Text('ADD')),
+          // Adding new columns for PD values
+          DataColumn(label: Text('PD')),
+        ],
+        rows: [
+          DataRow(cells: [
+            DataCell(Text('R')),
+            DataCell(_buildEditableCell('R_SPH')),
+            DataCell(_buildEditableCell('R_CYL')),
+            DataCell(_buildEditableCell('R_AXIS')),
+            DataCell(_buildEditableCell('R_ADD')),
+            // Adding a new editable cell for right PD
+            DataCell(_buildEditableCell('R_PD')),
+          ]),
+          DataRow(cells: [
+            DataCell(Text('L')),
+            DataCell(_buildEditableCell('L_SPH')),
+            DataCell(_buildEditableCell('L_CYL')),
+            DataCell(_buildEditableCell('L_AXIS')),
+            DataCell(_buildEditableCell('L_ADD')),
+            // Adding a new editable cell for left PD
+            DataCell(_buildEditableCell('L_PD')),
+          ]),
+        ],
+      ),
+    );
+  }
 
 //description table
 
