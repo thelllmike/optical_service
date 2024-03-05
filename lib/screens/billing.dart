@@ -7,6 +7,7 @@ import 'package:optical_desktop/requesthadleing/customer.dart';
 import 'package:optical_desktop/requesthadleing/deliverydate.dart';
 import 'package:optical_desktop/requesthadleing/Prescription.dart';
 import 'package:optical_desktop/requesthadleing/billing_items.dart';
+import 'package:optical_desktop/requesthadleing/updatestock.dart';
 import 'package:optical_desktop/requesthadleing/payment_details_service.dart';
 import 'package:optical_desktop/requesthadleing/print.dart';
 import 'package:optical_desktop/controller/FormController.dart';
@@ -782,6 +783,22 @@ class _BillScreenState extends State<BillScreen> {
         frameQty: frameQty,
         lensQty: lensQty,
       );
+
+       // Assuming LensService is correctly set up to update the stock
+    final UpdateStockService updateStockService = UpdateStockService();
+    // Call updateLensStock for the lens ID with the quantity
+    // Here, lensQty is used as an example; adjust as needed for your use case
+  try {
+  await Future.wait([
+    updateStockService.updateLensStock(lensId, lensQty),
+    updateStockService.updateFrameStock(frameId, frameQty),
+  ]);
+  print("All stock updates successfully completed.");
+} catch (error) {
+  print("An error occurred during stock updates: $error");
+}
+
+
 
       _submitPaymentDetails(billingId);
       _printBillingDetails();
