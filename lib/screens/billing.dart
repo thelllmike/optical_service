@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:optical_desktop/requesthadleing/BranchDetails.dart';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart';
 import 'package:optical_desktop/requesthadleing/customer.dart';
 import 'package:optical_desktop/requesthadleing/deliverydate.dart';
@@ -76,6 +77,7 @@ class _BillScreenState extends State<BillScreen> {
   String? selectedColor; // Define a state variable for the selected color
   String? selectedModel;
   String? _selectedGender; // Declare this at the class level
+   String? selectedPayType;
   final TextEditingController _quantityController =
       TextEditingController(text: "1");
 //  final FormController formController = FormController();
@@ -618,13 +620,21 @@ class _BillScreenState extends State<BillScreen> {
   void _printBillingDetails() async {
     final PrintHelper printHelper = PrintHelper();
 
+     BranchDetail branchDetail;
+  try {
+    branchDetail = await fetchBranchDetails(); // Using globals.branch_id inside fetchBranchDetails
+  } catch (e) {
+    print("Failed to fetch branch details: $e");
+    return; // Exit if branch details cannot be fetched
+  }
+
     // Gather customer and invoice details
     String customerName = _formController.fullNameController.text;
     String customerPhone = _formController.mobileNumberController.text;
     String invoiceDate = _formController.invoiceDateController.text;
     String invoiceNumber =
         invoiceId; // You might want to generate this programmatically or fetch it from a database
-
+    String salesPerson = _formController.salesPersonController.text.trim();
     // Generate the item details list
     List<Map<String, dynamic>> itemDetails = items
         .map((item) => {
@@ -667,12 +677,13 @@ class _BillScreenState extends State<BillScreen> {
       String logoAssetPath =
           'assets/logo.png'; // Ensure this file is included in your pubspec.yaml under assets
 
+
       final pdf = await printHelper.generateDocument(
         logoAssetPath:
             logoAssetPath, // Updated to use logoAssetPath for clarity
-        branchName: 'Branch Name',
+        branchName: branchDetail.branchName,
         branchAddress: 'Branch Address',
-        mobileNumber: 'Branch Phone Number',
+        mobileNumber: branchDetail.mobileNumber,
         customerName: customerName,
         customerPhone: customerPhone,
         invoiceDate: invoiceDate,
@@ -681,7 +692,7 @@ class _BillScreenState extends State<BillScreen> {
         prescriptionDetails: prescriptionDetails,
         total: total,
         advancePaid: advancePaid,
-        takenBy: 'Sales',
+        takenBy: salesPerson,
       );
 
       print("Total: $total, Advance Paid: $advancePaid"); // Debugging
@@ -833,41 +844,37 @@ class _BillScreenState extends State<BillScreen> {
     }
   }
 
-  void _submitPaymentDetails(int billingId) async {
-    double totalAmount =
-        double.tryParse(_formController.totalAmountController.text) ?? 0.0;
-    double discount =
-        double.tryParse(_formController.discountController.text) ?? 0.0;
-    double fittingCharges =
-        double.tryParse(_formController.fittingChargesController.text) ?? 0.0;
-    double grandTotal =
-        double.tryParse(_formController.grandTotalController.text) ?? 0.0;
-    double advancePaid =
-        double.tryParse(_formController.advancePaidController.text) ?? 0.0;
-    double balanceAmount =
-        double.tryParse(_formController.balanceAmountController.text) ?? 0.0;
-    String payType =
-        "Cash"; // Assuming this is selected from a dropdown or another input widget in your UI
+void _submitPaymentDetails(int billingId) async {
+  double totalAmount = double.tryParse(_formController.totalAmountController.text) ?? 0.0;
+  double discount = double.tryParse(_formController.discountController.text) ?? 0.0;
+  double fittingCharges = double.tryParse(_formController.fittingChargesController.text) ?? 0.0;
+  double grandTotal = double.tryParse(_formController.grandTotalController.text) ?? 0.0;
+  double advancePaid = double.tryParse(_formController.advancePaidController.text) ?? 0.0;
+  double balanceAmount = double.tryParse(_formController.balanceAmountController.text) ?? 0.0;
 
-    bool success = await PaymentDetailsService.submitPaymentDetails(
-      billingId: billingId,
-      totalAmount: totalAmount,
-      discount: discount,
-      fittingCharges: fittingCharges,
-      grandTotal: grandTotal,
-      advancePaid: advancePaid,
-      balanceAmount: balanceAmount,
-      payType: payType,
-    );
+  // Use a conditional check to handle the nullable selectedPayType
+  String payType = selectedPayType ?? 'DefaultPayType'; // Provides a default value if selectedPayType is null
 
-    if (success) {
-      print('Payment details submitted successfully');
-      // Handle successful submission (e.g., navigate to a confirmation screen)
-    } else {
-      print('Failed to submit payment details');
-      // Handle failure (e.g., show an error message)
-    }
+  bool success = await PaymentDetailsService.submitPaymentDetails(
+    billingId: billingId,
+    totalAmount: totalAmount,
+    discount: discount,
+    fittingCharges: fittingCharges,
+    grandTotal: grandTotal,
+    advancePaid: advancePaid,
+    balanceAmount: balanceAmount,
+    payType: payType, // Now correctly refers to a local variable initialized from selectedPayType
+  );
+
+  if (success) {
+    print('Payment details submitted successfully');
+    // Handle successful submission (e.g., navigate to a confirmation screen)
+  } else {
+    print('Failed to submit payment details');
+    // Handle failure (e.g., show an error message)
   }
+}
+
 
   Future<Map<String, dynamic>> _submitForm() async {
     if (_formController.customerId == null) {
@@ -1594,12 +1601,11 @@ class _BillScreenState extends State<BillScreen> {
     );
   }
 
-  Widget _buildPayTypeDropdown() {
-    String? selectedPayType;
-    // Assuming _formController.payTypeController is a TextEditingController
-    // You would convert the text controller to a string for the dropdown or manage the state of the dropdown separately
+Widget _buildPayTypeDropdown() {
+    // Remove the local declaration of selectedPayType
+    
     return DropdownButtonFormField<String>(
-      value: selectedPayType,
+      value: selectedPayType, // This will now refer to the instance variable
       decoration: InputDecoration(
         labelText: 'Pay Type',
         border: OutlineInputBorder(),
@@ -1614,12 +1620,13 @@ class _BillScreenState extends State<BillScreen> {
       }).toList(),
       onChanged: (newValue) {
         // Update the selected pay type state
-        selectedPayType = newValue;
-        // If you are using a controller for pay type, you can update it here
-        // _formController.payTypeController.text = newValue ?? '';
+        setState(() {
+          selectedPayType = newValue; // This updates the instance variable
+        });
       },
     );
   }
+
 
   Widget _buildDetailsCard(String title, List<Widget> children) {
     return Card(

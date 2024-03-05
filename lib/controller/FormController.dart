@@ -36,7 +36,7 @@ class FormController {
   TextEditingController get invoiceDateController => _invoiceDateController;
   TextEditingController get deliveryDateController => _deliveryDateController;
   TextEditingController get salesPersonController => _salesPersonController;
-
+TextEditingController payTypeController = TextEditingController(text: "Cash");
   void calculateTotals() {
     double totalAmount = double.tryParse(totalAmountController.text) ?? 0;
     double discount = double.tryParse(discountController.text) ?? 0;
