@@ -87,7 +87,7 @@ Widget build(BuildContext context) {
     ),
     body: Row(
       children: <Widget>[
-        Sidebar(),
+         Sidebar(),
         VerticalDivider(thickness: 1, width: 1),
         Expanded(
           child: Column(

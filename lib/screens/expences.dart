@@ -63,7 +63,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       ),
       body: Row(
         children: <Widget>[
-          Sidebar(), // Ensure the Sidebar widget is correctly imported
+           Sidebar(), // Ensure the Sidebar widget is correctly imported
           VerticalDivider(thickness: 1, width: 1),
           Expanded(
             child: Padding(

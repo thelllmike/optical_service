@@ -27,7 +27,7 @@ class AddProductScreen extends StatelessWidget {
       appBar: AppBar(title: Text('Add Product')),
       body: Row(
         children: <Widget>[
-          Sidebar(), // Uncomment and ensure the Sidebar widget is correctly implemented
+            Sidebar(), // Uncomment and ensure the Sidebar widget is correctly implemented
           VerticalDivider(thickness: 1, width: 1),
           Expanded(
             flex: 5,

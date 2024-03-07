@@ -27,7 +27,7 @@ class _EmployeeScreenState extends State<EmployeeScreen> {
       ),
      body: Row(
         children: <Widget>[
-          Sidebar(), // Sidebar widget
+           Sidebar(), // Sidebar widget
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8.0),

@@ -599,7 +599,7 @@ class _BillScreenState extends State<BillScreen> {
       ),
       body: Row(
         children: [
-          Sidebar(),
+            Sidebar(),
           Expanded(child: _buildMainContent()),
         ],
       ),

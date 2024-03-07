@@ -57,7 +57,7 @@ void _someFunction() {
       appBar: AppBar(title: Text('Dashboard')),
       body: Row(
         children: <Widget>[
-          Sidebar(), // Ensure Sidebar widget is properly defined in sidebar.dart
+             Sidebar(), // Ensure Sidebar widget is properly defined in sidebar.dart
           VerticalDivider(thickness: 1, width: 1),
           Expanded(
             child: SingleChildScrollView(

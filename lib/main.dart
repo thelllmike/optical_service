@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:lottie/lottie.dart';
+import 'package:optical_desktop/screens/home.dart';
 import 'package:optical_desktop/screens/login.dart';
 // Other imports...
 
@@ -31,10 +32,17 @@ class MyApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(10), // Box border radius
           ),
           child: Center(
-            child: Lottie.asset('assets/animations/1709781075179.json'),
+            child: Lottie.asset(
+  'assets/animations/1709781075179.json',
+   width: double.infinity, // This makes the animation expand to the width of its parent container
+  height: double.infinity, // This makes the animation expand to the height of its parent container
+  fit: BoxFit.contain, // This will fill the bounds of the parent container, potentially distorting the aspect ratio
+)
+
           ),
         ),
-        nextScreen: LoginScreen(),
+         nextScreen: LoginScreen(),
+        // nextScreen: Homescreen(),
         splashTransition: SplashTransition.fadeTransition,
         backgroundColor: Colors.white, // Set to match the box's background or your desired splash background
       ),
