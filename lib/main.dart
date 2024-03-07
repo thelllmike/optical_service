@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:animated_splash_screen/animated_splash_screen.dart';
+import 'package:lottie/lottie.dart';
 import 'package:optical_desktop/screens/login.dart';
-import 'package:optical_desktop/screens/register.dart';
-import 'screens/billing.dart';
-import 'screens/home.dart';  // Assuming you have a billing.dart file inside a screens folder
+// Other imports...
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -21,12 +19,25 @@ class MyApp extends StatelessWidget {
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        // Add other dark theme properties if needed
       ),
       themeMode: ThemeMode.dark,
-      //Homescreen // Set theme mode to dark
-      home:  LoginScreen(),
-      //RegisterScreen // Ensure you have a constructor marked as const in BillScreen
+      home: AnimatedSplashScreen(
+        duration: 4000,
+        splash: Container(
+          width: 1920 , // Specify the width of the box
+          height: 1080, // Specify the height of the box
+          decoration: BoxDecoration(
+            color: Colors.white, // This matches the box's background color
+            borderRadius: BorderRadius.circular(10), // Box border radius
+          ),
+          child: Center(
+            child: Lottie.asset('assets/animations/1709781075179.json'),
+          ),
+        ),
+        nextScreen: LoginScreen(),
+        splashTransition: SplashTransition.fadeTransition,
+        backgroundColor: Colors.white, // Set to match the box's background or your desired splash background
+      ),
       debugShowCheckedModeBanner: false,
     );
   }
