@@ -77,7 +77,7 @@ class _BillScreenState extends State<BillScreen> {
   String? selectedColor; // Define a state variable for the selected color
   String? selectedModel;
   String? _selectedGender; // Declare this at the class level
-   String? selectedPayType;
+  String? selectedPayType;
   final TextEditingController _quantityController =
       TextEditingController(text: "1");
 //  final FormController formController = FormController();
@@ -103,12 +103,12 @@ class _BillScreenState extends State<BillScreen> {
 
   Map<String, TextEditingController> _controllers = {};
   DateTime _selectedDate = DateTime.now();
-  List<Item> items = [
-    Item(description: 'Item 1', quantity: 1, unitPrice: 10.0)
-  ];
+
+  List<Item> items = []; // Starts as an empty list
+
   bool _isSidebarVisible = false;
   //create random invoice id
-   late String invoiceId;
+  late String invoiceId;
 
   void _deleteItem(int index) {
     setState(() {
@@ -119,6 +119,7 @@ class _BillScreenState extends State<BillScreen> {
   @override
   void initState() {
     super.initState();
+
     _fetchFramesData();
     _fetchLensCategories();
     _quantityController.addListener(_onQuantityChanged);
@@ -128,12 +129,13 @@ class _BillScreenState extends State<BillScreen> {
     // invoiceId = _generateInvoiceId(int length);
   }
 
- String _generateInvoiceId(int length) {
-  const String _chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  Random _rnd = Random();
-  return String.fromCharCodes(Iterable.generate(
-    length, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));
-}
+  String _generateInvoiceId(int length) {
+    const String _chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    Random _rnd = Random();
+    return String.fromCharCodes(Iterable.generate(
+        length, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));
+  }
 
   @override
   void dispose() {
@@ -163,6 +165,7 @@ class _BillScreenState extends State<BillScreen> {
         setState(() {
           if (result.containsKey('price')) {
             _lensPrice = double.tryParse(result['price']) ?? 0.0;
+            onLensPriceDetermined();
           } else {
             // Handle error or default case
             _lensPrice = 0.0;
@@ -177,6 +180,52 @@ class _BillScreenState extends State<BillScreen> {
   void _onMobileNumberSubmitted() {
     if (_formController.mobileNumberController.text.isNotEmpty) {
       _fetchCustomerDetails(_formController.mobileNumberController.text);
+    }
+  }
+
+  void addFrameItem() {
+    if (selectedModel != null && selectedPrice > 0) {
+      // Updated the description to only include the model
+      String description = "Frames -${selectedModel!}";
+
+      int quantity =
+          int.tryParse(_formController.frameQuantityController.text) ?? 1;
+
+      Item frameItem = Item(
+          description: description,
+          quantity: quantity,
+          unitPrice: selectedPrice);
+      setState(() {
+        items.add(frameItem);
+        print('Items now: $items');
+      });
+    }
+  }
+
+// Assume this method is called when a frame model is selected and its price is fetched
+  void onFramePriceDetermined() {
+    addFrameItem();
+  }
+
+// Assume this method is called when the lens price is determined
+  void onLensPriceDetermined() {
+    addLensItem();
+  }
+
+  void addLensItem() {
+    if (_selectedCoating != null && _lensPrice > 0) {
+      // Updated the description to only include the coating
+      String description = "Lens - ${_selectedCoating!}";
+
+      // Default quantity to 1 since it's required but not the focus
+      int quantity = 1;
+
+      Item lensItem = Item(
+          description: description, quantity: quantity, unitPrice: _lensPrice);
+      setState(() {
+        items.add(lensItem);
+        print('Items now: $items');
+      });
     }
   }
 
@@ -231,7 +280,8 @@ class _BillScreenState extends State<BillScreen> {
       _selectedCoating = null; // Reset selected coating when category changes
       _selectedPower = null; // Optionally reset selected power too
       _coatings = []; // Reset coatings list
-      _powers = []; // Reset powers list
+      _powers = [];
+      onLensPriceDetermined(); // Reset powers list
     });
     _fetchCoatingsForCategory(newValue);
   }
@@ -599,14 +649,14 @@ class _BillScreenState extends State<BillScreen> {
       ),
       body: Row(
         children: [
-            Sidebar(),
+          Sidebar(),
           Expanded(child: _buildMainContent()),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Handle save & print logic here
-           invoiceId = _generateInvoiceId(6);
+          invoiceId = _generateInvoiceId(6);
           _submitCustomerForm();
         },
         child: Icon(Icons.print),
@@ -620,13 +670,14 @@ class _BillScreenState extends State<BillScreen> {
   void _printBillingDetails() async {
     final PrintHelper printHelper = PrintHelper();
 
-     BranchDetail branchDetail;
-  try {
-    branchDetail = await fetchBranchDetails(); // Using globals.branch_id inside fetchBranchDetails
-  } catch (e) {
-    print("Failed to fetch branch details: $e");
-    return; // Exit if branch details cannot be fetched
-  }
+    BranchDetail branchDetail;
+    try {
+      branchDetail =
+          await fetchBranchDetails(); // Using globals.branch_id inside fetchBranchDetails
+    } catch (e) {
+      print("Failed to fetch branch details: $e");
+      return; // Exit if branch details cannot be fetched
+    }
 
     // Gather customer and invoice details
     String customerName = _formController.fullNameController.text;
@@ -677,12 +728,13 @@ class _BillScreenState extends State<BillScreen> {
       String logoAssetPath =
           'assets/logo.png'; // Ensure this file is included in your pubspec.yaml under assets
 
-
       final pdf = await printHelper.generateDocument(
         logoAssetPath:
             logoAssetPath, // Updated to use logoAssetPath for clarity
         branchName: branchDetail.branchName,
-        branchAddress: 'Branch Address',
+        //  branchName: 'Branch Address',
+        // branchAddress: 'Branch Address',
+
         mobileNumber: branchDetail.mobileNumber,
         customerName: customerName,
         customerPhone: customerPhone,
@@ -692,7 +744,7 @@ class _BillScreenState extends State<BillScreen> {
         prescriptionDetails: prescriptionDetails,
         total: total,
         advancePaid: advancePaid,
-        takenBy: salesPerson,
+        takenBy: salesPerson, branchAddress: '',
       );
 
       print("Total: $total, Advance Paid: $advancePaid"); // Debugging
@@ -795,21 +847,19 @@ class _BillScreenState extends State<BillScreen> {
         lensQty: lensQty,
       );
 
-       // Assuming LensService is correctly set up to update the stock
-    final UpdateStockService updateStockService = UpdateStockService();
-    // Call updateLensStock for the lens ID with the quantity
-    // Here, lensQty is used as an example; adjust as needed for your use case
-  try {
-  await Future.wait([
-    updateStockService.updateLensStock(lensId, lensQty),
-    updateStockService.updateFrameStock(frameId, frameQty),
-  ]);
-  print("All stock updates successfully completed.");
-} catch (error) {
-  print("An error occurred during stock updates: $error");
-}
-
-
+      // Assuming LensService is correctly set up to update the stock
+      final UpdateStockService updateStockService = UpdateStockService();
+      // Call updateLensStock for the lens ID with the quantity
+      // Here, lensQty is used as an example; adjust as needed for your use case
+      try {
+        await Future.wait([
+          updateStockService.updateLensStock(lensId, lensQty),
+          updateStockService.updateFrameStock(frameId, frameQty),
+        ]);
+        print("All stock updates successfully completed.");
+      } catch (error) {
+        print("An error occurred during stock updates: $error");
+      }
 
       _submitPaymentDetails(billingId);
       _printBillingDetails();
@@ -844,37 +894,44 @@ class _BillScreenState extends State<BillScreen> {
     }
   }
 
-void _submitPaymentDetails(int billingId) async {
-  double totalAmount = double.tryParse(_formController.totalAmountController.text) ?? 0.0;
-  double discount = double.tryParse(_formController.discountController.text) ?? 0.0;
-  double fittingCharges = double.tryParse(_formController.fittingChargesController.text) ?? 0.0;
-  double grandTotal = double.tryParse(_formController.grandTotalController.text) ?? 0.0;
-  double advancePaid = double.tryParse(_formController.advancePaidController.text) ?? 0.0;
-  double balanceAmount = double.tryParse(_formController.balanceAmountController.text) ?? 0.0;
+  void _submitPaymentDetails(int billingId) async {
+    double totalAmount =
+        double.tryParse(_formController.totalAmountController.text) ?? 0.0;
+    double discount =
+        double.tryParse(_formController.discountController.text) ?? 0.0;
+    double fittingCharges =
+        double.tryParse(_formController.fittingChargesController.text) ?? 0.0;
+    double grandTotal =
+        double.tryParse(_formController.grandTotalController.text) ?? 0.0;
+    double advancePaid =
+        double.tryParse(_formController.advancePaidController.text) ?? 0.0;
+    double balanceAmount =
+        double.tryParse(_formController.balanceAmountController.text) ?? 0.0;
 
-  // Use a conditional check to handle the nullable selectedPayType
-  String payType = selectedPayType ?? 'DefaultPayType'; // Provides a default value if selectedPayType is null
+    // Use a conditional check to handle the nullable selectedPayType
+    String payType = selectedPayType ??
+        'DefaultPayType'; // Provides a default value if selectedPayType is null
 
-  bool success = await PaymentDetailsService.submitPaymentDetails(
-    billingId: billingId,
-    totalAmount: totalAmount,
-    discount: discount,
-    fittingCharges: fittingCharges,
-    grandTotal: grandTotal,
-    advancePaid: advancePaid,
-    balanceAmount: balanceAmount,
-    payType: payType, // Now correctly refers to a local variable initialized from selectedPayType
-  );
+    bool success = await PaymentDetailsService.submitPaymentDetails(
+      billingId: billingId,
+      totalAmount: totalAmount,
+      discount: discount,
+      fittingCharges: fittingCharges,
+      grandTotal: grandTotal,
+      advancePaid: advancePaid,
+      balanceAmount: balanceAmount,
+      payType:
+          payType, // Now correctly refers to a local variable initialized from selectedPayType
+    );
 
-  if (success) {
-    print('Payment details submitted successfully');
-    // Handle successful submission (e.g., navigate to a confirmation screen)
-  } else {
-    print('Failed to submit payment details');
-    // Handle failure (e.g., show an error message)
+    if (success) {
+      print('Payment details submitted successfully');
+      // Handle successful submission (e.g., navigate to a confirmation screen)
+    } else {
+      print('Failed to submit payment details');
+      // Handle failure (e.g., show an error message)
+    }
   }
-}
-
 
   Future<Map<String, dynamic>> _submitForm() async {
     if (_formController.customerId == null) {
@@ -1189,6 +1246,7 @@ void _submitPaymentDetails(int billingId) async {
           if (quantity.isNotEmpty) {
             try {
               qty = int.parse(quantity);
+              onFramePriceDetermined();
             } catch (e) {
               // Handle error for invalid input
             }
@@ -1601,9 +1659,9 @@ void _submitPaymentDetails(int billingId) async {
     );
   }
 
-Widget _buildPayTypeDropdown() {
+  Widget _buildPayTypeDropdown() {
     // Remove the local declaration of selectedPayType
-    
+
     return DropdownButtonFormField<String>(
       value: selectedPayType, // This will now refer to the instance variable
       decoration: InputDecoration(
@@ -1626,7 +1684,6 @@ Widget _buildPayTypeDropdown() {
       },
     );
   }
-
 
   Widget _buildDetailsCard(String title, List<Widget> children) {
     return Card(
