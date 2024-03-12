@@ -30,7 +30,7 @@ class UpdateStockService {
   }
 
   Future<void> updateFrameStock(int frameId, int frameQty) async {
-    final Uri uri = Uri.parse('http://localhost:8001/product/update-frame-stock');
+    final Uri uri = Uri.parse('http://172.208.26.215/product/update-frame-stock');
     try {
       final response = await http.put(
         uri,

@@ -33,9 +33,14 @@ class PrintHelper {
     final Uint8List fontData = (await rootBundle.load("assets/fonts/OpenSans-Regular.ttf")).buffer.asUint8List();
     final ttf = pw.Font.ttf(fontData.buffer.asByteData());
 
+  final double widthInPoints = 14.5 * 72 / 2.54;
+  final double heightInPoints = 19.5 * 72 / 2.54;
+  final PdfPageFormat customPageSize = PdfPageFormat(widthInPoints, heightInPoints);
+
     // Create a PDF document using the data
     pdf.addPage(
       pw.Page(
+           pageFormat: customPageSize, 
         theme: pw.ThemeData.withFont(
           base: ttf,
         ),

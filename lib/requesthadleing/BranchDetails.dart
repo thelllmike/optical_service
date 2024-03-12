@@ -27,7 +27,7 @@ class BranchDetail {
 
 // Function to fetch branch details using the global branch_id
 Future<BranchDetail> fetchBranchDetails() async {
-  final response = await http.get(Uri.parse('http://localhost:8001/register/branch/${globals.branch_id}'));
+  final response = await http.get(Uri.parse('http://172.208.26.215/register/branch/${globals.branch_id}'));
 
   if (response.statusCode == 200) {
     return BranchDetail.fromJson(jsonDecode(response.body));

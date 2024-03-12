@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       home: AnimatedSplashScreen(
-        duration: 4000, // Duration in milliseconds, adjust to suit your animation's length
+        duration: 100000, // Duration in milliseconds, adjust to suit your animation's length
         splash: Lottie.asset('assets/animations/1709781075179.json'),
         nextScreen: LoginScreen(), // The screen to navigate to after your animation
         splashTransition: SplashTransition.fadeTransition,

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class DeliveryDateService {
-  static const String _baseUrl = 'http://localhost:8001';
+  static const String _baseUrl = 'http://172.208.26.215';
 
   // Updating the return type to a more specific Future that returns a custom class or map
   static Future<Map<String, dynamic>> submitBilling({

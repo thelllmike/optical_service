@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:optical_desktop/global.dart' as globals;
 
 class CustomerService {
-  static const _baseUrl = 'http://localhost:8001/billing';
+  static const _baseUrl = 'http://172.208.26.215/billing';
 
   // Fetch customer details by mobile number and return the customer ID if found.
   static Future<int?> fetchCustomerDetails(String mobileNumber) async {

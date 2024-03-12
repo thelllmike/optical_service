@@ -15,7 +15,7 @@ class PaymentDetailsService {
     required String payType,
   }) async {
     ///billing/billings/payment-details
-    var url = Uri.parse('http://localhost:8001/billing/billings/payment-details'); // Change to your actual backend URL
+    var url = Uri.parse('http://172.208.26.215/billing/billings/payment-details'); // Change to your actual backend URL
     var response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

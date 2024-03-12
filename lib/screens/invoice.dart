@@ -67,7 +67,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
 
   ///Quary/billing-details
   Future<List<Invoice>> fetchInvoices(int branchId) async {
-    final uri = Uri.parse('http://localhost:8001/Quary/billing-details')
+    final uri = Uri.parse('http://172.208.26.215/Quary/billing-details')
         .replace(queryParameters: {'branch_id': branchId.toString()});
     final response = await http.get(uri);
 

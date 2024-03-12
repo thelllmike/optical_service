@@ -43,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
 
   Future<int> registerOpticalShop() async {
-  var url = Uri.parse('http://localhost:8001/register/create/optical_shop');
+  var url = Uri.parse('http://172.208.26.215/register/create/optical_shop');
   var response = await http.post(
     url,
     headers: <String, String>{
@@ -66,7 +66,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 }
 
 Future<int> registerBranch(int shopId) async {
-  var url = Uri.parse('http://localhost:8001/register/create/branch');
+  var url = Uri.parse('http://172.208.26.215/register/create/branch');
   var response = await http.post(
     url,
     headers: <String, String>{
@@ -91,7 +91,7 @@ Future<int> registerBranch(int shopId) async {
 
 
   Future<void> registerUser(int branchId) async {
-  var url = Uri.parse('http://localhost:8001/register/create/user');
+  var url = Uri.parse('http://172.208.26.215/register/create/user');
   var response = await http.post(
     url,
     headers: <String, String>{

@@ -49,7 +49,7 @@ class Prescription {
 
 ////billing/prescriptions
 class PrescriptionService {
-  static const String _baseUrl = 'http://localhost:8001/billing/prescriptions';
+  static const String _baseUrl = 'http://172.208.26.215/billing/prescriptions';
 
   static Future<bool> submitPrescription({required Prescription prescription}) async {
     final uri = Uri.parse(_baseUrl);

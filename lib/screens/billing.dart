@@ -165,7 +165,7 @@ class _BillScreenState extends State<BillScreen> {
         setState(() {
           if (result.containsKey('price')) {
             _lensPrice = double.tryParse(result['price']) ?? 0.0;
-            onLensPriceDetermined();
+              onLensPriceDetermined();
           } else {
             // Handle error or default case
             _lensPrice = 0.0;
@@ -232,7 +232,7 @@ class _BillScreenState extends State<BillScreen> {
   ///lensdropdown/onlycategory
   Future<List<String>> fetchLensCategories(int branch_id) async {
     final uri = Uri.parse(
-        'http://localhost:8001/lensdropdown/onlycategory?branch_id=$branch_id');
+        'http://172.208.26.215/lensdropdown/onlycategory?branch_id=$branch_id');
     final response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -247,7 +247,7 @@ class _BillScreenState extends State<BillScreen> {
   Future<List<String>> fetchCoatingsByCategory(
       String category, int branchId) async {
     final uri = Uri.parse(
-        'http://localhost:8001/lensdropdown/coatings-by-category?category=$category&branch_id=$branchId');
+        'http://172.208.26.215/lensdropdown/coatings-by-category?category=$category&branch_id=$branchId');
     final response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -281,7 +281,7 @@ class _BillScreenState extends State<BillScreen> {
       _selectedPower = null; // Optionally reset selected power too
       _coatings = []; // Reset coatings list
       _powers = [];
-      onLensPriceDetermined(); // Reset powers list
+      // onLensPriceDetermined(); // Reset powers list
     });
     _fetchCoatingsForCategory(newValue);
   }
@@ -338,7 +338,7 @@ class _BillScreenState extends State<BillScreen> {
   Future<List<String>> fetchPowersByCategoryAndCoating(
       String category, String coating, int branchId) async {
     final uri = Uri.parse(
-            'http://localhost:8001/lensdropdown/powers-by-category-and-coating')
+            'http://172.208.26.215/lensdropdown/powers-by-category-and-coating')
         .replace(queryParameters: {
       'category': category,
       'coating': coating,
@@ -375,7 +375,7 @@ class _BillScreenState extends State<BillScreen> {
     required int branchId,
   }) async {
     final uri =
-        Uri.parse('http://localhost:8001/lensdropdown/lens-price-by-selection')
+        Uri.parse('http://172.208.26.215/lensdropdown/lens-price-by-selection')
             .replace(queryParameters: {
       'category': category,
       'coating': coating,
@@ -422,7 +422,7 @@ class _BillScreenState extends State<BillScreen> {
             .toString(), // Converting int to String to be used in URL
       };
       final uri = Uri.http(
-          'localhost:8001', '/dropdown/models-by-selection', queryParameters);
+          '172.208.26.215', '/dropdown/models-by-selection', queryParameters);
 
       final response = await http.get(uri);
 
@@ -446,7 +446,7 @@ class _BillScreenState extends State<BillScreen> {
   Future<void> _fetchFramesData() async {
     try {
       // Construct the URL with the branch_id query parameter
-      final url = Uri.parse('http://localhost:8001/dropdown/onlyframe').replace(
+      final url = Uri.parse('http://172.208.26.215/dropdown/onlyframe').replace(
           queryParameters: {'branch_id': globals.branch_id.toString()});
 
       final response = await http.get(url);
@@ -480,7 +480,7 @@ class _BillScreenState extends State<BillScreen> {
             .toString(), // Converting int to String to be used in URL
       };
       final uri = Uri.http(
-          'localhost:8001', '/dropdown/brands-by-frame', queryParameters);
+          '172.208.26.215', '/dropdown/brands-by-frame', queryParameters);
 
       final response = await http.get(uri);
 
@@ -514,7 +514,7 @@ class _BillScreenState extends State<BillScreen> {
         'branch_id': globals.branch_id
             .toString(), // Converting int to String to be used in URL
       };
-      final uri = Uri.http('localhost:8001',
+      final uri = Uri.http('172.208.26.215',
           '/dropdown/sizes-by-frame-and-brand', queryParameters);
 
       final response = await http.get(uri);
@@ -547,7 +547,7 @@ class _BillScreenState extends State<BillScreen> {
         'branch_id': globals.branch_id
             .toString(), // Converting int to String to be used in URL
       };
-      final uri = Uri.http('localhost:8001',
+      final uri = Uri.http('172.208.26.215',
           '/dropdown/colors-by-frame-brand-size', queryParameters);
 
       final response = await http.get(uri);
@@ -582,7 +582,7 @@ class _BillScreenState extends State<BillScreen> {
           globals.branch_id.toString(), // Assuming globals.branch_id is an int
     };
     final uri = Uri.http(
-        'localhost:8001', '/dropdown/price-by-selection', queryParameters);
+        '172.208.26.215', '/dropdown/price-by-selection', queryParameters);
 
     try {
       var response = await http.get(uri);
@@ -1173,7 +1173,7 @@ class _BillScreenState extends State<BillScreen> {
   ///billing/customers/by-phone/{phone_number}
   Future<int?> _fetchCustomerDetails(String mobileNumber) async {
     final response = await http.get(Uri.parse(
-        'http://localhost:8001/billing/customers/by-phone/$mobileNumber'));
+        'http://172.208.26.215/billing/customers/by-phone/$mobileNumber'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);

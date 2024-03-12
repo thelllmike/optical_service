@@ -10,7 +10,7 @@ Future<void> submitBillingItem({
   required int lensQty,
 ///billing/billings/items
 }) async {
-  final uri = Uri.parse('http://localhost:8001/billing/billings/items'); // Adjust the URL as needed
+  final uri = Uri.parse('http://172.208.26.215/billing/billings/items'); // Adjust the URL as needed
   final response = await http.post(
     uri,
     headers: {'Content-Type': 'application/json'},

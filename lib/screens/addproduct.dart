@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart'; // Ensure this import is correct
 import 'package:optical_desktop/global.dart'as globals; 
 // Replace with your actual API base URL
-const String baseUrl = "http://localhost:8001/product";
+const String baseUrl = "http://172.208.26.215/product";
 
 Future<http.Response> addProduct(
     String endpoint, Map<String, dynamic> productData) {
