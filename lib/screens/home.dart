@@ -32,36 +32,22 @@ class Homescreen extends StatefulWidget {
 
 class _HomescreenState extends State<Homescreen> {
   @override
-  void initState() {
-    super.initState();
-    _someFunction();
-  }
-
-void _someFunction() {
-  try {
-    if (globals.branch_id == 0) {
-      print("Branch ID is not set.");
-    } else {
-      print("Branch ID: ${globals.branch_id}");
-    }
-  } catch (e) {
-    // Handle any exceptions here
-    print("An error occurred: $e");
-  }
-}
-
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Dashboard')),
       body: Row(
         children: <Widget>[
-             Sidebar(), // Ensure Sidebar widget is properly defined in sidebar.dart
+          Sidebar(), // Ensure Sidebar widget is properly defined in sidebar.dart
           VerticalDivider(thickness: 1, width: 1),
           Expanded(
             child: SingleChildScrollView(
-              child: ChartsWidget(),
+              // The default scrollDirection is vertical.
+              child: Column(
+                children: [
+                  SummaryCards(),
+                  ChartsWidget(),
+                ],
+              ),
             ),
           ),
         ],
@@ -69,6 +55,83 @@ void _someFunction() {
     );
   }
 }
+
+
+
+class SummaryCards extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SummaryCard(title: 'Monthly Sales', value: '4', color: Colors.orange),
+        SummaryCard(title: 'today Orders', value: '47', color: Colors.green),
+        SummaryCard(title: 'Today Sales', value: '2', color: Colors.pink),
+        SummaryCard(title: 'Today Customers', value: '923', color: Colors.blue),
+      ],
+    );
+  }
+}
+
+class SummaryCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final Color color;
+
+  const SummaryCard({
+    required this.title,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        margin: EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(20.0),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+            SizedBox(height: 10),
+            Text(
+              value,
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+class Legend extends StatelessWidget {
+  final Color color;
+  final String text;
+
+  const Legend({Key? key, required this.color, required this.text}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.circle, color: color),
+        SizedBox(width: 8.0),
+        Text(text, style: TextStyle(color: Colors.white)),
+      ],
+    );
+  }
+}
+
 
 
 
@@ -131,7 +194,7 @@ class ChartsWidget extends StatelessWidget {
               height: 200,
               child: BarChart(
                 BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
+                  alignment: BarChartAlignment.spaceEvenly,
                   maxY: 20,
                   barTouchData: BarTouchData(
                     enabled: false,
@@ -143,7 +206,7 @@ class ChartsWidget extends StatelessWidget {
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 14),
-                      margin: 16,
+                      margin: 8,
                       getTitles: (double value) {
                         switch (value.toInt()) {
                           case 0:
@@ -152,6 +215,25 @@ class ChartsWidget extends StatelessWidget {
                             return 'Feb';
                           case 2:
                             return 'Mar';
+                          case 3:
+                            return 'Apr';
+                          case 4:
+                            return 'May';
+                          case 5:
+                            return 'Jun';  
+                          case 6:
+                            return 'Jul';  
+                          case 7:
+                            return 'Aug';
+                           case 8:
+                            return 'Sep';
+                          case 9:
+                            return 'Oct';
+                          case 10:
+                            return 'Nov';
+                          case 11:
+                            return 'Dec';
+                       
                           // Continue for other months
                           default:
                             return '';
@@ -192,6 +274,97 @@ class ChartsWidget extends StatelessWidget {
                         ),
                       ],
                     ),
+                        BarChartGroupData(
+                      x: 3,
+                      barRods: [
+                        BarChartRodData(
+                          y: 20,
+                          colors: [Colors.orangeAccent, Colors.deepOrange],
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                        BarChartGroupData(
+                      x: 4,
+                      barRods: [
+                        BarChartRodData(
+                          y: 25,
+                          colors: [Color.fromARGB(255, 153, 199, 53), Colors.deepOrange],
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                        BarChartGroupData(
+                      x: 5,
+                      barRods: [
+                        BarChartRodData(
+                          y: 04,
+                          colors: [Color.fromARGB(255, 32, 120, 12), Colors.deepOrange],
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                    BarChartGroupData(
+                      x: 6,
+                      barRods: [
+                        BarChartRodData(
+                          y: 10,
+                          colors: [Color.fromARGB(255, 6, 152, 132), Colors.deepOrange],
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                    BarChartGroupData(
+                      x: 7,
+                      barRods: [
+                        BarChartRodData(
+                          y: 14,
+                          colors: [Color.fromARGB(255, 7, 62, 134), Colors.deepOrange],
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                    BarChartGroupData(
+                      x: 8,
+                      barRods: [
+                        BarChartRodData(
+                          y: 44,
+                          colors: [Color.fromARGB(255, 129, 60, 218), Colors.deepOrange],
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                    BarChartGroupData(
+                      x: 9,
+                      barRods: [
+                        BarChartRodData(
+                          y: 34,
+                          colors: [Color.fromARGB(255, 167, 24, 183), Colors.deepOrange],
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                    BarChartGroupData(
+                      x: 10,
+                      barRods: [
+                        BarChartRodData(
+                          y: 4,
+                          colors: [Color.fromARGB(255, 68, 60, 126), Colors.deepOrange],
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                    BarChartGroupData(
+                      x: 11,
+                      barRods: [
+                        BarChartRodData(
+                          y: 14,
+                          colors: [Color.fromARGB(255, 179, 24, 81), Colors.deepOrange],
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                   
                     // Add more BarChartGroupData for other months if needed
                   ],
                 ),
@@ -203,4 +376,7 @@ class ChartsWidget extends StatelessWidget {
       ),
     );
   }
+
+
+  
 }

@@ -16,7 +16,7 @@ class Sidebar extends StatelessWidget {
           case 0: // Index for 'Home'
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => Homescreen()),
+              MaterialPageRoute(builder: (context) => Homescreen ()),
             );
             break;
           // ... include other cases for different indices here

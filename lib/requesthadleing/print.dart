@@ -131,14 +131,6 @@ class PrintHelper {
   }
 
 
-// Future<void> printDocument(pw.Document pdf) async {
-//     try {
-//       // Printing directly from the app
-//       await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
-//     } catch (e) {
-//       print("Error during print operation: $e");
-//     }
-//   }
 
 Future<void> printDocument(pw.Document pdf) async {
   try {
