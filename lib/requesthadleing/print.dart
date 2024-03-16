@@ -33,14 +33,12 @@ class PrintHelper {
     final Uint8List fontData = (await rootBundle.load("assets/fonts/OpenSans-Regular.ttf")).buffer.asUint8List();
     final ttf = pw.Font.ttf(fontData.buffer.asByteData());
 
-  final double widthInPoints = 14.5 * 72 / 2.54;
-  final double heightInPoints = 19.5 * 72 / 2.54;
-  final PdfPageFormat customPageSize = PdfPageFormat(widthInPoints, heightInPoints);
+ 
 
     // Create a PDF document using the data
     pdf.addPage(
       pw.Page(
-           pageFormat: customPageSize, 
+          
         theme: pw.ThemeData.withFont(
           base: ttf,
         ),
@@ -132,30 +130,32 @@ class PrintHelper {
     return pdf;
   }
 
-  // Method to print the PDF document and save a copy of it
-Future<void> printAndSaveDocument(pw.Document pdf, String suggestedFileName) async {
+
+// Future<void> printDocument(pw.Document pdf) async {
+//     try {
+//       // Printing directly from the app
+//       await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
+//     } catch (e) {
+//       print("Error during print operation: $e");
+//     }
+//   }
+
+Future<void> printDocument(pw.Document pdf) async {
   try {
-    // Open save file dialog
-    String? outputPath = await FilePicker.platform.saveFile(
-      dialogTitle: 'Please select an output file:',
-      fileName: suggestedFileName, // Suggested file name
+    // Printing directly from the app with B5 size
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'document-name',
+      format: PdfPageFormat(
+        176.0 * PdfPageFormat.mm,
+        250.0 * PdfPageFormat.mm,
+      ),
     );
-
-    if (outputPath != null) {
-      final File file = File(outputPath);
-      await file.writeAsBytes(await pdf.save());
-      print("PDF Saved to: $outputPath");
-
-      // Optionally, offer printing directly from the app
-      await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
-    } else {
-      // User canceled the picker
-      print("File save operation was canceled.");
-    }
   } catch (e) {
-    print("Error during print/save: $e");
+    print("Error during print operation: $e");
   }
 }
+
 
 
 }

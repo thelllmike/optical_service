@@ -749,10 +749,10 @@ class _BillScreenState extends State<BillScreen> {
 
       print("Total: $total, Advance Paid: $advancePaid"); // Debugging
 
-      String fileName = "Invoice_$invoiceNumber.pdf";
-      await printHelper.printAndSaveDocument(pdf, fileName);
+      // String fileName = "Invoice_$invoiceNumber.pdf";
+       await printHelper.printDocument(pdf);
 
-      print("Document should have been printed and saved as $fileName");
+      // print("Document should have been printed and saved as $fileName");
     } catch (e) {
       print("An error occurred while printing or saving the document: $e");
     }
