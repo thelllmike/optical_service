@@ -13,12 +13,12 @@ import 'package:optical_desktop/requesthadleing/payment_details_service.dart';
 import 'package:optical_desktop/requesthadleing/print.dart';
 import 'package:optical_desktop/controller/FormController.dart';
 import 'package:intl/intl.dart';
-// import 'package:uuid/uuid.dart';
-
-// import 'package:optical_desktop/requesthadleing/lensDropdown.dart';
+import 'package:optical_desktop/screens/apiservices.dart';
 import 'package:optical_desktop/global.dart' as globals;
 
 final ValueNotifier<ThemeData> _themeNotifier = ValueNotifier(ThemeData.dark());
+
+AppService appService = AppService();
 
 class Item {
   String description;
@@ -230,34 +230,59 @@ class _BillScreenState extends State<BillScreen> {
   }
 
   ///lensdropdown/onlycategory
-  Future<List<String>> fetchLensCategories(int branch_id) async {
-    final uri = Uri.parse(
-        'http://172.208.26.215/lensdropdown/onlycategory?branch_id=$branch_id');
-    final response = await http.get(uri);
+Future<List<String>> fetchLensCategories(int branch_id) async {
+  // Using AppService to get the full URL
+  String fullUrl = appService.getFullUrl('lensdropdown/onlycategory?branch_id=$branch_id');
+  final Uri uri = Uri.parse(fullUrl); // Convert fullUrl string to Uri
+  
+  try {
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json', // Assuming JSON content type
+    });
 
     if (response.statusCode == 200) {
       List<dynamic> categoriesJson = json.decode(response.body);
-      return categoriesJson.cast<String>();
+      
+      // Assuming the JSON response is a list of strings
+      // If the structure is different (e.g., objects), you'll need to adjust this parsing
+      return List<String>.from(categoriesJson.map((category) => category.toString()));
     } else {
+      // Handle HTTP error responses
       print('Error fetching categories: ${response.statusCode}');
       return [];
     }
+  } catch (e) {
+    // Handle any exceptions caught during the HTTP request
+    print('Exception fetching categories: $e');
+    return [];
   }
+}
 
-  Future<List<String>> fetchCoatingsByCategory(
-      String category, int branchId) async {
-    final uri = Uri.parse(
-        'http://172.208.26.215/lensdropdown/coatings-by-category?category=$category&branch_id=$branchId');
-    final response = await http.get(uri);
+
+ Future<List<String>> fetchCoatingsByCategory(String category, int branchId) async {
+  String fullUrl = appService.getFullUrl('lensdropdown/coatings-by-category?category=$category&branch_id=$branchId');
+  final Uri uri = Uri.parse(fullUrl); // Convert fullUrl string to Uri
+
+  try {
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json', // Assuming JSON content type
+    });
 
     if (response.statusCode == 200) {
       List<dynamic> coatingsJson = json.decode(response.body);
-      return coatingsJson.cast<String>();
+      // Use List<String>.from to ensure proper casting from List<dynamic> if it's purely strings
+      return List<String>.from(coatingsJson);
     } else {
       print('Error fetching coatings: ${response.statusCode}');
       return [];
     }
+  } catch (e) {
+    // Handle any exceptions caught during the HTTP request
+    print('Exception fetching coatings: $e');
+    return [];
   }
+}
+
 
   Future<void> _fetchCoatingsForCategory(String category) async {
     // Simulate fetching coatings data. Replace with your actual fetching logic
@@ -335,285 +360,298 @@ class _BillScreenState extends State<BillScreen> {
 
   //drodown fetch by power
   ///lensdropdown/powers-by-category-and-coating
-  Future<List<String>> fetchPowersByCategoryAndCoating(
-      String category, String coating, int branchId) async {
-    final uri = Uri.parse(
-            'http://172.208.26.215/lensdropdown/powers-by-category-and-coating')
-        .replace(queryParameters: {
-      'category': category,
-      'coating': coating,
-      'branch_id': branchId.toString(),
+Future<List<String>> fetchPowersByCategoryAndCoating(String category, String coating, int branchId) async {
+  // Use AppService to construct the URL with base path
+  String basePath = appService.getFullUrl('lensdropdown/powers-by-category-and-coating');
+  final Uri uri = Uri.parse(basePath).replace(queryParameters: {
+    'category': category,
+    'coating': coating,
+    'branch_id': branchId.toString(),
+  });
+
+  try {
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json', // Assuming JSON content type
     });
 
-    try {
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        // Parse the JSON response and ensure numbers are converted to strings
-        final List<dynamic> powersJson = json.decode(response.body);
-        // Use .map() to convert each element to a string, handling numbers correctly
-        List<String> powers =
-            powersJson.map((dynamic value) => value.toString()).toList();
-        return powers;
-      } else {
-        // Log or handle HTTP errors here
-        print('Error fetching powers: HTTP ${response.statusCode}');
-        return [];
-      }
-    } catch (e) {
-      // Handle any kind of exception here, not just HTTP exceptions
-      print('Error fetching powers: $e');
+    if (response.statusCode == 200) {
+      // Parse the JSON response and ensure numbers are converted to strings
+      final List<dynamic> powersJson = json.decode(response.body);
+      // Use .map() to convert each element to a string, handling numbers and other types correctly
+      List<String> powers = powersJson.map((dynamic value) => value.toString()).toList();
+      return powers;
+    } else {
+      // Log or handle HTTP errors here
+      print('Error fetching powers: HTTP ${response.statusCode}');
       return [];
     }
+  } catch (e) {
+    // Handle any kind of exception here, not just HTTP exceptions
+    print('Error fetching powers: $e');
+    return [];
   }
+}
+
 
 //fetch by categoty ,coating an dpower
-  Future<Map<String, dynamic>> fetchLensPriceBySelection({
-    required String category,
-    required String coating,
-    required double power,
-    required int branchId,
-  }) async {
-    final uri =
-        Uri.parse('http://172.208.26.215/lensdropdown/lens-price-by-selection')
-            .replace(queryParameters: {
-      'category': category,
-      'coating': coating,
-      'power': power.toString(),
-      'branch_id': branchId.toString(),
-    });
+Future<Map<String, dynamic>> fetchLensPriceBySelection({
+  required String category,
+  required String coating,
+  required double power,
+  required int branchId,
+}) async {
+  // Use AppService to construct the URL with base path
+  String basePath = appService.getFullUrl('lensdropdown/lens-price-by-selection');
+  final Uri uri = Uri.parse(basePath).replace(queryParameters: {
+    'category': category,
+    'coating': coating,
+    'power': power.toString(),
+    'branch_id': branchId.toString(),
+  });
 
-    try {
-      final response = await http.get(uri);
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        return {
-          'lensId': jsonResponse['id'],
-          'price': jsonResponse['price'].toString(),
-        };
-      } else {
-        print('Error fetching price: ${response.statusCode}');
-        // Return an error map or default values
-        return {'error': 'Error fetching price', 'lens_id': 0, 'price': '0.0'};
-      }
-    } catch (e) {
-      print('Exception when fetching price: $e');
-      // Return an error map or default values
+  try {
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json', // Assuming JSON content type
+    });
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
       return {
-        'error': 'Exception when fetching price',
-        'lens_id': 0,
-        'price': '0.0'
+        'lensId': jsonResponse['id'],
+        'price': jsonResponse['price'].toString(),
       };
+    } else {
+      print('Error fetching price: ${response.statusCode}');
+      // Return an error map or default values
+      return {'error': 'Error fetching price', 'lensId': 0, 'price': '0.0'};
     }
+  } catch (e) {
+    print('Exception when fetching price: $e');
+    // Return an error map or default values
+    return {
+      'error': 'Exception when fetching price',
+      'lensId': 0,
+      'price': '0.0'
+    };
   }
+}
+
 
   ///dropdown/models-by-selection
 
-  Future<void> _fetchModelsBySelection(
-      String frame, String brand, String size, String color) async {
-    try {
-      // Construct the URL with the branch_id query parameter
-      final queryParameters = {
-        'frame': frame,
-        'brand': brand,
-        'size': size,
-        'color': color,
-        'branch_id': globals.branch_id
-            .toString(), // Converting int to String to be used in URL
-      };
-      final uri = Uri.http(
-          '172.208.26.215', '/dropdown/models-by-selection', queryParameters);
+Future<void> _fetchModelsBySelection(
+    String frame, String brand, String size, String color) async {
+  try {
+    // Use AppService to get the base URL and append endpoint
+    String basePath = appService.getFullUrl('dropdown/models-by-selection');
 
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        List<String> fetchedModels =
-            List<String>.from(json.decode(response.body));
-
-        setState(() {
-          models = fetchedModels;
-        });
-      } else {
-        // Handle the error; maybe show a message to the user
-        print('Error fetching models: ${response.body}');
-      }
-    } catch (e) {
-      // Handle any exceptions; maybe show an error message
-      print('Network Error: $e');
-    }
-  }
-
-  Future<void> _fetchFramesData() async {
-    try {
-      // Construct the URL with the branch_id query parameter
-      final url = Uri.parse('http://172.208.26.215/dropdown/onlyframe').replace(
-          queryParameters: {'branch_id': globals.branch_id.toString()});
-
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        List<String> fetchedFrames = (json.decode(response.body) as List)
-            .map((data) =>
-                data.toString()) // Assuming the API returns a list of strings
-            .toList();
-
-        setState(() {
-          frames = fetchedFrames;
-        });
-      } else {
-        // Handle the error; maybe show a message to the user
-      }
-    } catch (e) {
-      // Handle any exceptions; maybe show an error message
-    }
-  }
-
-  ///dropdown/brands-by-frame
-  ///filter by frames which we selected
-
-  Future<void> _fetchBrandsByFrame(String frame) async {
-    try {
-      // Include the branch_id in the query parameters
-      final queryParameters = {
-        'frame': frame,
-        'branch_id': globals.branch_id
-            .toString(), // Converting int to String to be used in URL
-      };
-      final uri = Uri.http(
-          '172.208.26.215', '/dropdown/brands-by-frame', queryParameters);
-
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        List<String> fetchedBrands =
-            List<String>.from(json.decode(response.body));
-
-        setState(() {
-          brands = fetchedBrands;
-        });
-      } else {
-        // Handle the error; maybe show a message to the user
-        print('Error fetching brands: ${response.body}');
-      }
-    } catch (e) {
-      // Handle any exceptions; maybe show an error message
-      print('Network Error: $e');
-    }
-  }
-
-//filtered bybrand and frame and get details
-  ///dropdown/sizes-by-frame-and-brand
-  ///
-
-  Future<void> _fetchSizesByFrameAndBrand(String frame, String brand) async {
-    try {
-      // Construct the URL with the branch_id query parameter
-      final queryParameters = {
-        'frame': frame,
-        'brand': brand,
-        'branch_id': globals.branch_id
-            .toString(), // Converting int to String to be used in URL
-      };
-      final uri = Uri.http('172.208.26.215',
-          '/dropdown/sizes-by-frame-and-brand', queryParameters);
-
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        List<String> fetchedSizes =
-            List<String>.from(json.decode(response.body));
-
-        setState(() {
-          sizes = fetchedSizes;
-        });
-      } else {
-        // Handle the error; maybe show a message to the user
-        print('Error fetching sizes: ${response.body}');
-      }
-    } catch (e) {
-      // Handle any exceptions; maybe show an error message
-      print('Network Error: $e');
-    }
-  }
-
-  Future<void> _fetchColorsByFrameBrandSize(
-      String frame, String brand, String size) async {
-    try {
-      // Construct the URL with the branch_id query parameter
-      final queryParameters = {
-        'frame': frame,
-        'brand': brand,
-        'size': size,
-        'branch_id': globals.branch_id
-            .toString(), // Converting int to String to be used in URL
-      };
-      final uri = Uri.http('172.208.26.215',
-          '/dropdown/colors-by-frame-brand-size', queryParameters);
-
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        List<String> fetchedColors =
-            List<String>.from(json.decode(response.body));
-
-        setState(() {
-          colors = fetchedColors;
-        });
-      } else {
-        // Handle the error; maybe show a message to the user
-        print('Error fetching colors: ${response.body}');
-      }
-    } catch (e) {
-      // Handle any exceptions; maybe show an error message
-      print('Network Error: $e');
-    }
-  }
-
-  Future<Map<String, String>> fetchPriceBySelection(String frame, String brand,
-      String size, String color, String model) async {
     // Construct the URL with the branch_id query parameter
     final queryParameters = {
       'frame': frame,
       'brand': brand,
       'size': size,
       'color': color,
-      'model': model,
-      'branch_id':
-          globals.branch_id.toString(), // Assuming globals.branch_id is an int
+      'branch_id': globals.branch_id.toString(), // Ensure branch_id is included
     };
-    final uri = Uri.http(
-        '172.208.26.215', '/dropdown/price-by-selection', queryParameters);
 
-    try {
-      var response = await http.get(uri);
+    final uri = Uri.parse(basePath).replace(queryParameters: queryParameters);
 
-      if (response.statusCode == 200) {
-        var jsonResponse = jsonDecode(response.body);
-        // Assuming 'id' is also a key in the jsonResponse
-        String priceString = jsonResponse['price'].toString();
-        String idString = jsonResponse['id'].toString();
-        print(
-            "Price and ID received: $priceString, $idString"); // Print the received data
-        return {
-          'frameId': idString,
-          'price': priceString,
-        };
-      } else {
-        // Handle the error; maybe show a message to the user
-        print("Error fetching data: ${response.body}");
-        return {
-          'error': "Error fetching data",
-          'errorMessage': response.body,
-        };
-      }
-    } catch (e) {
-      print("Exception caught: $e");
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json', // Assuming JSON content type
+    });
+
+    if (response.statusCode == 200) {
+      List<String> fetchedModels = List<String>.from(json.decode(response.body));
+      setState(() {
+        models = fetchedModels;
+      });
+    } else {
+      // Handle the error; maybe show a message to the user
+      print('Error fetching models: ${response.body}');
+    }
+  } catch (e) {
+    // Handle any exceptions; maybe show an error message
+    print('Network Error: $e');
+  }
+}
+
+
+Future<void> _fetchFramesData() async {
+  try {
+    // Use AppService to construct the base URL
+    String basePath = appService.getFullUrl('dropdown/onlyframe');
+    
+    // Append query parameters directly in the URL if necessary
+    final uri = Uri.parse(basePath).replace(queryParameters: {
+      'branch_id': globals.branch_id.toString(), // Convert branch ID to string for the URL
+    });
+
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json', // Recommended to specify content type
+    });
+
+    if (response.statusCode == 200) {
+      List<String> fetchedFrames = (json.decode(response.body) as List<dynamic>)
+          .map((data) => data.toString()) // Convert each item to a string
+          .toList();
+
+      setState(() {
+        frames = fetchedFrames; // Assuming 'frames' is a state variable in your widget
+      });
+    } else {
+      // Optionally handle the error, such as logging or showing a message
+      print('Error fetching frames: HTTP ${response.statusCode}');
+    }
+  } catch (e) {
+    // Optionally handle exceptions, such as logging or showing an error message
+    print('Exception when fetching frames: $e');
+  }
+}
+
+
+  ///dropdown/brands-by-frame
+  ///filter by frames which we selected
+
+Future<void> _fetchBrandsByFrame(String frame) async {
+  try {
+    // Use AppService to construct the base URL
+    String basePath = appService.getFullUrl('dropdown/brands-by-frame');
+
+    // Construct query parameters
+    final queryParameters = {
+      'frame': frame,
+      'branch_id': globals.branch_id.toString(), // Ensure branch_id is included
+    };
+
+    // Append query parameters to the base URL
+    final uri = Uri.parse(basePath).replace(queryParameters: queryParameters);
+
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json', // Assuming JSON content type
+    });
+
+    if (response.statusCode == 200) {
+      List<String> fetchedBrands = List<String>.from(json.decode(response.body));
+      setState(() {
+        brands = fetchedBrands; // Assuming 'brands' is a state variable in your widget
+      });
+    } else {
+      // Optionally handle the error, such as logging or showing a message
+      print('Error fetching brands: HTTP ${response.statusCode}');
+    }
+  } catch (e) {
+    // Optionally handle exceptions, such as logging or showing an error message
+    print('Exception when fetching brands: $e');
+  }
+}
+
+
+//filtered bybrand and frame and get details
+  ///dropdown/sizes-by-frame-and-brand
+  ///
+
+Future<void> _fetchSizesByFrameAndBrand(String frame, String brand) async {
+  try {
+    // Use AppService to construct the base URL
+    String basePath = appService.getFullUrl('dropdown/sizes-by-frame-and-brand');
+
+    // Append query parameters to the base URL
+    final uri = Uri.parse(basePath).replace(queryParameters: {
+      'frame': frame,
+      'brand': brand,
+      'branch_id': globals.branch_id.toString(),
+    });
+
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json',
+    });
+
+    if (response.statusCode == 200) {
+      List<String> fetchedSizes = List<String>.from(json.decode(response.body));
+
+      setState(() {
+        sizes = fetchedSizes;
+      });
+    } else {
+      print('Error fetching sizes: ${response.body}');
+    }
+  } catch (e) {
+    print('Network Error: $e');
+  }
+}
+
+
+Future<void> _fetchColorsByFrameBrandSize(String frame, String brand, String size) async {
+  try {
+    // Use AppService to construct the base URL
+    String basePath = appService.getFullUrl('dropdown/colors-by-frame-brand-size');
+
+    // Append query parameters to the base URL
+    final uri = Uri.parse(basePath).replace(queryParameters: {
+      'frame': frame,
+      'brand': brand,
+      'size': size,
+      'branch_id': globals.branch_id.toString(), // Ensure branch_id is included
+    });
+
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json', // Recommended to specify content type
+    });
+
+    if (response.statusCode == 200) {
+      List<String> fetchedColors = List<String>.from(json.decode(response.body));
+
+      setState(() {
+        colors = fetchedColors; // Assuming 'colors' is a state variable in your widget
+      });
+    } else {
+      print('Error fetching colors: HTTP ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception when fetching colors: $e');
+  }
+}
+
+
+Future<Map<String, String>> fetchPriceBySelection(String frame, String brand, String size, String color, String model) async {
+  try {
+    String basePath = appService.getFullUrl('dropdown/price-by-selection');
+    final uri = Uri.parse(basePath).replace(queryParameters: {
+      'frame': frame,
+      'brand': brand,
+      'size': size,
+      'color': color,
+      'model': model,
+      'branch_id': globals.branch_id.toString(),
+    });
+
+    var response = await http.get(uri, headers: {
+      'Content-Type': 'application/json',
+    });
+
+    if (response.statusCode == 200) {
+      var jsonResponse = jsonDecode(response.body);
+      String priceString = jsonResponse['price'].toString();
+      String idString = jsonResponse['id'].toString();
       return {
-        'error': "Exception caught",
-        'errorMessage': e.toString(),
+        'frameId': idString,
+        'price': priceString,
+      };
+    } else {
+      print("Error fetching data: ${response.body}");
+      return {
+        'error': "Error fetching data",
+        'errorMessage': response.body,
       };
     }
+  } catch (e) {
+    print("Exception caught: $e");
+    return {
+      'error': "Exception caught",
+      'errorMessage': e.toString(),
+    };
   }
+}
+
 
   Future<void> _selectDate(
       BuildContext context, TextEditingController controller) async {
@@ -1171,25 +1209,34 @@ class _BillScreenState extends State<BillScreen> {
   }
 
   ///billing/customers/by-phone/{phone_number}
-  Future<int?> _fetchCustomerDetails(String mobileNumber) async {
-    final response = await http.get(Uri.parse(
-        'http://172.208.26.215/billing/customers/by-phone/$mobileNumber'));
+Future<int?> _fetchCustomerDetails(String mobileNumber) async {
+  try {
+    // Construct the full URL using AppService
+    String fullPath = appService.getFullUrl('billing/customers/by-phone/$mobileNumber');
+    final Uri uri = Uri.parse(fullPath);
+
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json', // It's good practice to specify the content type
+    });
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      // Ensure the keys exactly match those in your received JSON data
+      // Assuming _formController is already defined and accessible
       _formController.fullNameController.text = data['full_name'] ?? '';
       _formController.nicNumberController.text = data['nic_number'] ?? '';
       _formController.addressController.text = data['address'] ?? '';
-      // Update the UI if needed
+      // Trigger a UI update if necessary
       setState(() {});
-      // Update your gender dropdown based on the response, if necessary
     } else {
       print('Customer not found or error fetching customer details.');
-      // return null; // Return null if customer doesn't exist
     }
-    return null;
+  } catch (e) {
+    // Handle exceptions, such as network errors
+    print('Exception when fetching customer details: $e');
   }
+  return null; // Return null by default, indicating no specific customer ID was fetched
+}
+
 
   Widget _buildGenderDropdown() {
     return DropdownButton<String>(

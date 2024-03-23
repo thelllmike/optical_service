@@ -5,6 +5,9 @@ import 'package:optical_desktop/screens/sidebar/sidebar.dart'; // Ensure this pa
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:optical_desktop/global.dart' as globals;
+import 'package:optical_desktop/screens/apiservices.dart';
+
+AppService appService = AppService();
 
 class MyApp extends StatelessWidget {
   @override
@@ -66,18 +69,20 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   }
 
   ///Quary/billing-details
-  Future<List<Invoice>> fetchInvoices(int branchId) async {
-    final uri = Uri.parse('http://172.208.26.215/Quary/billing-details')
-        .replace(queryParameters: {'branch_id': branchId.toString()});
-    final response = await http.get(uri);
+Future<List<Invoice>> fetchInvoices(int branchId) async {
+  final String url = appService.getFullUrl('Quary/billing-details'); // Adjusted to use centralized URL management
+  final uri = Uri.parse(url).replace(queryParameters: {'branch_id': branchId.toString()});
 
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
-      return data.map((json) => Invoice.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load invoices for branch ID $branchId');
-    }
+  final response = await http.get(uri);
+
+  if (response.statusCode == 200) {
+    List<dynamic> data = json.decode(response.body);
+    return data.map((json) => Invoice.fromJson(json)).toList();
+  } else {
+    throw Exception('Failed to load invoices for branch ID $branchId');
   }
+}
+
 
 @override
 Widget build(BuildContext context) {

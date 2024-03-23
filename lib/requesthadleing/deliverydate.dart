@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:optical_desktop/screens/apiservices.dart';
+
+AppService appService = AppService();
 
 class DeliveryDateService {
-  static const String _baseUrl = 'http://172.208.26.215';
+  // static const String _baseUrl = 'http://172.208.26.215';
 
   // Updating the return type to a more specific Future that returns a custom class or map
   static Future<Map<String, dynamic>> submitBilling({
@@ -11,7 +14,9 @@ class DeliveryDateService {
     required String salesPerson,
     required int customerId,
   }) async {
-    final Uri uri = Uri.parse('$_baseUrl/billing/billings');
+      final String endpoint = 'billing/billings';
+      final fullUrl = appService.getFullUrl(endpoint);
+    // final Uri uri = Uri.parse('$_baseUrl/billing/billings');
 ///billing/billings/items
     // Validate input parameters here if necessary
     if (invoiceDate.isEmpty || deliveryDate.isEmpty || salesPerson.isEmpty || customerId <= 0) {
@@ -20,7 +25,7 @@ class DeliveryDateService {
 
     try {
       final response = await http.post(
-        uri,
+        Uri.parse(fullUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'invoice_date': invoiceDate,

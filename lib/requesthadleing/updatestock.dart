@@ -1,10 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:optical_desktop/global.dart' as globals;
+import 'package:optical_desktop/screens/apiservices.dart';
+
+AppService appService = AppService();
 
 class UpdateStockService {
   Future<void> updateLensStock(int lensId, int lensQty) async {
-    final Uri uri = Uri.parse('http://localhost:8001/product/update-lens-stock');
+
+  final String endpoint = 'product/update-lens-stock';
+  final fullUrl = appService.getFullUrl(endpoint);
+
+    final Uri uri = Uri.parse(fullUrl);
     try {
       final response = await http.put(
         uri,
@@ -30,7 +37,11 @@ class UpdateStockService {
   }
 
   Future<void> updateFrameStock(int frameId, int frameQty) async {
-    final Uri uri = Uri.parse('http://172.208.26.215/product/update-frame-stock');
+
+  final String endpoint = 'product/update-frame-stock';
+  final fullUrl = appService.getFullUrl(endpoint);
+
+    final Uri uri = Uri.parse(fullUrl);
     try {
       final response = await http.put(
         uri,

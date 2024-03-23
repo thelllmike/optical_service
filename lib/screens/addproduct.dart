@@ -5,14 +5,22 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart'; // Ensure this import is correct
 import 'package:optical_desktop/global.dart'as globals; 
+import 'package:optical_desktop/screens/apiservices.dart';
+
+AppService appService = AppService();
 // Replace with your actual API base URL
-const String baseUrl = "http://172.208.26.215/product";
+ 
+
+//product/add_lens
 
 Future<http.Response> addProduct(
     String endpoint, Map<String, dynamic> productData) {
+
     productData['branch_id'] = globals.branch_id;
+    final String endpoint = 'product/add_lens';
+  final fullUrl = appService.getFullUrl(endpoint);
   return http.post(
-    Uri.parse('$baseUrl/$endpoint'),
+    Uri.parse(fullUrl),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
@@ -136,9 +144,9 @@ class _ProductFormSectionState extends State<ProductFormSection> {
 
   Future<http.Response> updateProduct(
       String endpoint, int id, Map<String, dynamic> productData) async {
-    String url = '$baseUrl/$endpoint/$id'; // Constructing the URL with the ID
+     final fullUrl = appService.getFullUrl('product/$endpoint/$id');// Constructing the URL with the ID
     return http.put(
-      Uri.parse(url),
+      Uri.parse(fullUrl), // Use fullUrl
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -148,8 +156,9 @@ class _ProductFormSectionState extends State<ProductFormSection> {
 
   Future<void> deleteProduct(String endpoint, int id) async {
     try {
+       final fullUrl = appService.getFullUrl('product/$endpoint/$id');
       var response = await http.delete(
-        Uri.parse('$baseUrl/$endpoint/$id'),
+         Uri.parse(fullUrl), // Use fullUrl
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -174,9 +183,11 @@ class _ProductFormSectionState extends State<ProductFormSection> {
 
  Future<void> fetchData() async {
     String fetchEndpoint = widget.endpoint == 'add_lens' ? 'lenses' : 'frames';
+    // var endpoint = 'product/lenses';
+    String fullUrl = appService.getFullUrl('product/$fetchEndpoint?branch_id=${globals.branch_id}');
     try {
       var response = await http.get(
-        Uri.parse('$baseUrl/$fetchEndpoint?branch_id=${globals.branch_id}'),
+         Uri.parse(fullUrl),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -202,37 +213,6 @@ class _ProductFormSectionState extends State<ProductFormSection> {
       print('Network Error: $e');
     }
   }
-
-
-
-// Future<void> fetchData() async {
-//   String fetchEndpoint = widget.endpoint == 'add_lens' ? 'lenses' : 'frames';
-//   try {
-//     var response = await http.get(Uri.parse('$baseUrl/$fetchEndpoint'));
-//     if (response.statusCode == 200) {
-//       List<dynamic> dataList = jsonDecode(response.body);
-//       setState(() {
-//         tableData = dataList.map((item) {
-//           List<String> row = [];
-//           // Assuming 'id' is the key for the ID in your data
-//           // Make sure this key matches the key used in your backend
-//           row.add(item['id'].toString()); 
-//           // Iterate over the table headers and fill in row data
-//           widget.tableHeaders.forEach((header) {
-//             String key = convertToKey(header);
-//             var value = item[key];
-//             row.add(value != null ? value.toString() : 'N/A');
-//           });
-//           return row;
-//         }).toList();
-//       });
-//     } else {
-//       print('Failed to load data: ${response.body}');
-//     }
-//   } catch (e) {
-//     print('Network Error: $e');
-//   }
-// }
 
 
   String convertToKey(String header) {
@@ -277,7 +257,7 @@ class _ProductFormSectionState extends State<ProductFormSection> {
       http.Response response;
       if (editingItemId != null) {
         // Update logic: Call the update API
-        print("button pressed: ${editingItemId}");
+        // print("button pressed: ${editingItemId}");
         response =
             await updateProduct(widget.endpoint, editingItemId!, productData);
       } else {

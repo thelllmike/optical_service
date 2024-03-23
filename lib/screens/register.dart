@@ -42,14 +42,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
 
 
-  Future<int> registerOpticalShop() async {
-  var url = Uri.parse('http://172.208.26.215/register/create/optical_shop');
+Future<int> registerOpticalShop() async {
+  var url = appService.getFullUrl('register/create/optical_shop');
   var response = await http.post(
-    url,
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-    body: jsonEncode(<String, String>{
+    Uri.parse(url),
+    headers: {'Content-Type': 'application/json; charset=UTF-8'},
+    body: jsonEncode({
       'shop_name': opticalShopController.text,
       'head_office_address': headOfficeAddressController.text,
       'contact_number': mobileNumberController.text,
@@ -65,14 +63,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
+
 Future<int> registerBranch(int shopId) async {
-  var url = Uri.parse('http://172.208.26.215/register/create/branch');
+  var url = appService.getFullUrl('register/create/branch');
   var response = await http.post(
-    url,
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-    body: jsonEncode(<String, String>{
+    Uri.parse(url),
+    headers: {'Content-Type': 'application/json; charset=UTF-8'},
+    body: jsonEncode({
       'shop_id': shopId.toString(),
       'branch_name': branchNameController.text,
       'branch_code': getBranchCode(),
@@ -82,7 +79,7 @@ Future<int> registerBranch(int shopId) async {
 
   if (response.statusCode == 200) {
     var responseData = json.decode(response.body);
-    return responseData['id'];  // Assuming the ID is returned in the response
+    return responseData['id'];
   } else {
     throw Exception('Failed to register branch');
   }
@@ -90,18 +87,18 @@ Future<int> registerBranch(int shopId) async {
 
 
 
-  Future<void> registerUser(int branchId) async {
-  var url = Uri.parse('http://172.208.26.215/register/create/user');
+Future<void> registerUser(int branchId) async {
+  // Use AppService to construct the base URL
+  String basePath = appService.getFullUrl('register/create/user');
+  var url = Uri.parse(basePath);
   var response = await http.post(
     url,
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-    body: jsonEncode(<String, dynamic>{
+    headers: {'Content-Type': 'application/json; charset=UTF-8'},
+    body: jsonEncode({
       'email': emailController.text,
       'password': passwordController.text,
       'branch_id': branchId.toString(),
-      'role': 'owner', // Modify as needed
+      'role': 'owner', // Modify as needed based on your application logic
     }),
   );
 
@@ -136,23 +133,6 @@ Future<void> completeRegistrationProcess() async {
 }
 
 
-//  Future<void> completeRegistrationProcess() async {
-//   try {
-//     // First, register the optical shop and get its ID
-//     final int shopId = await registerOpticalShop();
-
-//     // Then, register the branch with the obtained shop ID
-//     final int branchId = await registerBranch(shopId);
-
-//     // Finally, register the user with the obtained branch ID
-//     await registerUser(branchId);
-
-//     Fluttertoast.showToast(msg: 'Complete registration successful');
-//   } catch (e) {
-//     Fluttertoast.showToast(msg: 'Registration failed: ${e.toString()}');
-//     print(e.toString());
-//   }
-// }
 
 
 void _submitForm() {

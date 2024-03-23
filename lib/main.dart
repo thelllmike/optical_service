@@ -42,8 +42,8 @@ class MyApp extends StatelessWidget {
                 .contain, // This will fill the bounds of the parent container, potentially distorting the aspect ratio
           )),
         ),
-        //  nextScreen: LoginScreen(),
-        nextScreen: Homescreen(),
+          nextScreen: LoginScreen(),
+        // nextScreen: Homescreen(),
         splashTransition: SplashTransition.fadeTransition,
         backgroundColor: Colors
             .white, // Set to match the box's background or your desired splash background

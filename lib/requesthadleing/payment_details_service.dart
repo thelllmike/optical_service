@@ -2,6 +2,9 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:optical_desktop/screens/apiservices.dart';
+
+AppService appService = AppService();
 
 class PaymentDetailsService {
   static Future<bool> submitPaymentDetails({
@@ -15,9 +18,13 @@ class PaymentDetailsService {
     required String payType,
   }) async {
     ///billing/billings/payment-details
-    var url = Uri.parse('http://172.208.26.215/billing/billings/payment-details'); // Change to your actual backend URL
+    
+    final String endpoint = 'billing/billings/payment-details';
+    final fullUrl = appService.getFullUrl(endpoint);
+    
+    // var url = Uri.parse('$fullUrl'); // Change to your actual backend URL
     var response = await http.post(
-      url,
+      Uri.parse(fullUrl), // Correctly using 'fullUrl' here
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'billing_id': billingId,

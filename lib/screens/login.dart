@@ -5,6 +5,9 @@ import 'package:optical_desktop/screens/home.dart';
 import 'package:optical_desktop/screens/register.dart';
 import 'package:optical_desktop/global.dart' as globals;
 import 'package:http/http.dart' as http;
+import 'package:optical_desktop/screens/apiservices.dart';
+
+AppService appService = AppService();
 
 
 class MyApp extends StatelessWidget {
@@ -35,8 +38,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
 Future<void> _login() async {
   if (_formKey.currentState!.validate()) {
+    // Use AppService to construct the URL
+    String url = appService.getFullUrl('register/login');
     final response = await http.post(
-      Uri.parse('http://172.208.26.215/register/login'),
+      Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'email': _emailController.text,
@@ -44,18 +49,18 @@ Future<void> _login() async {
       }),
     );
 
-   if (response.statusCode == 200) {
-  final responseData = json.decode(response.body);
+    if (response.statusCode == 200) {
+      final responseData = json.decode(response.body);
   
-  if (responseData.containsKey('branchId') && responseData['branchId'] != null) {
-    globals.branch_id = responseData['branchId'];  // Directly assign integer value
-  } else {
-    print("Error: Branch ID not found in response");
-    return;
-  }
+      if (responseData.containsKey('branchId') && responseData['branchId'] != null) {
+        globals.branch_id = responseData['branchId'];  // Assume globals is accessible
+      } else {
+        print("Error: Branch ID not found in response");
+        return;
+      }
 
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => Homescreen ()),
+        MaterialPageRoute(builder: (context) => Homescreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,6 +69,7 @@ Future<void> _login() async {
     }
   }
 }
+
 
 
   void _navigateToRegister() {
