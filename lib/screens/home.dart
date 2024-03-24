@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:optical_desktop/requesthadleing/sales_service.dart';
 import 'package:optical_desktop/screens/sidebar/sidebar.dart';
-import 'package:optical_desktop/global.dart'as globals; // Make sure this import is correct
+
+
+
+
 
 void main() => runApp(MyApp());
 
@@ -24,7 +28,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
 class Homescreen extends StatefulWidget {
   @override
   _HomescreenState createState() => _HomescreenState();
@@ -45,6 +48,7 @@ class _HomescreenState extends State<Homescreen> {
               child: Column(
                 children: [
                   SummaryCards(),
+                  SizedBox(height: 400),
                   ChartsWidget(),
                 ],
               ),
@@ -56,21 +60,96 @@ class _HomescreenState extends State<Homescreen> {
   }
 }
 
+///Quary/billing-details
 
 
 class SummaryCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SummaryCard(title: 'Monthly Sales', value: '4', color: Colors.orange),
-        SummaryCard(title: 'today Orders', value: '47', color: Colors.green),
-        SummaryCard(title: 'Today Sales', value: '2', color: Colors.pink),
-        SummaryCard(title: 'Today Customers', value: '923', color: Colors.blue),
-      ],
+    return FutureBuilder<double>(
+      future: SalesService.fetchCurrentMonthlySales(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // While data is loading, return a loading indicator or placeholder
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          // If there's an error, display an error message
+          return Text('Error: ${snapshot.error}');
+        } else {
+          // Once data is loaded, display the summary cards with the sales data
+          return Row(
+            children: [
+              SummaryCard(
+                title: 'Monthly Sales',
+                value: snapshot.data.toString(),
+                color: Colors.orange,
+              ),
+              FutureBuilder<int>(
+                future: SalesService.fetchDailyOrders(DateTime.now()),
+                builder: (context, orderSnapshot) {
+                  if (orderSnapshot.connectionState == ConnectionState.waiting) {
+                    // While data is loading, return a loading indicator or placeholder
+                    return CircularProgressIndicator();
+                  } else if (orderSnapshot.hasError) {
+                    // If there's an error, display an error message
+                    return Text('Error: ${orderSnapshot.error}');
+                  } else {
+                    // Once data is loaded, display the summary card for today's orders
+                    return SummaryCard(
+                      title: 'Today Orders',
+                      value: orderSnapshot.data.toString(),
+                      color: Colors.green,
+                    );
+                  }
+                },
+              ),
+              FutureBuilder<double>(
+                future: SalesService.fetchTotalSales(DateTime.now()),
+                builder: (context, salesSnapshot) {
+                  if (salesSnapshot.connectionState == ConnectionState.waiting) {
+                    // While data is loading, return a loading indicator or placeholder
+                    return CircularProgressIndicator();
+                  } else if (salesSnapshot.hasError) {
+                    // If there's an error, display an error message
+                    return Text('Error: ${salesSnapshot.error}');
+                  } else {
+                    // Once data is loaded, display the summary card for today's sales
+                    return SummaryCard(
+                      title: 'Today Sales',
+                      value: salesSnapshot.data.toString(),
+                      color: Colors.pink,
+                    );
+                  }
+                },
+              ),
+              FutureBuilder<int>(
+                future: SalesService.fetchUniqueCustomers(DateTime.now()),
+                builder: (context, customersSnapshot) {
+                  if (customersSnapshot.connectionState == ConnectionState.waiting) {
+                    // While data is loading, return a loading indicator or placeholder
+                    return CircularProgressIndicator();
+                  } else if (customersSnapshot.hasError) {
+                    // If there's an error, display an error message
+                    return Text('Error: ${customersSnapshot.error}');
+                  } else {
+                    // Once data is loaded, display the summary card for today's unique customers
+                    return SummaryCard(
+                      title: 'Today Customers',
+                      value: customersSnapshot.data.toString(),
+                      color: Colors.blue,
+                    );
+                  }
+                },
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 }
+
+
 
 class SummaryCard extends StatelessWidget {
   final String title;
@@ -103,7 +182,10 @@ class SummaryCard extends StatelessWidget {
             SizedBox(height: 10),
             Text(
               value,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
           ],
         ),
@@ -112,13 +194,12 @@ class SummaryCard extends StatelessWidget {
   }
 }
 
-
-
 class Legend extends StatelessWidget {
   final Color color;
   final String text;
 
-  const Legend({Key? key, required this.color, required this.text}) : super(key: key);
+  const Legend({Key? key, required this.color, required this.text})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -132,11 +213,6 @@ class Legend extends StatelessWidget {
   }
 }
 
-
-
-
-
-
 class ChartsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -147,42 +223,9 @@ class ChartsWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'Sales Distribution',
-              style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            SizedBox(height: 20),
-            SizedBox(
-              height: 200,
-              child: PieChart(
-                PieChartData(
-                  sections: [
-                    PieChartSectionData(
-                        value: 40,
-                        color: Colors.red,
-                        title: '40%',
-                        showTitle: true),
-                    PieChartSectionData(
-                        value: 30,
-                        color: Colors.green,
-                        title: '30%',
-                        showTitle: true),
-                    PieChartSectionData(
-                        value: 30,
-                        color: Colors.blue,
-                        title: '30%',
-                        showTitle: true),
-                  ],
-                  sectionsSpace: 0, // No space between sections
-                  centerSpaceRadius:
-                      40, // Radius of the center space inside pie chart
-                ),
-              ),
-            ),
-            SizedBox(height: 40),
+            // SizedBox(height: 20),
+
+            // SizedBox(height: 40),
             Text(
               'Monthly Sales',
               style: TextStyle(
@@ -190,8 +233,9 @@ class ChartsWidget extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: Colors.white),
             ),
+            SizedBox(height: 200),
             SizedBox(
-              height: 200,
+              height: 150,
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceEvenly,
@@ -220,12 +264,12 @@ class ChartsWidget extends StatelessWidget {
                           case 4:
                             return 'May';
                           case 5:
-                            return 'Jun';  
+                            return 'Jun';
                           case 6:
-                            return 'Jul';  
+                            return 'Jul';
                           case 7:
                             return 'Aug';
-                           case 8:
+                          case 8:
                             return 'Sep';
                           case 9:
                             return 'Oct';
@@ -233,7 +277,7 @@ class ChartsWidget extends StatelessWidget {
                             return 'Nov';
                           case 11:
                             return 'Dec';
-                       
+
                           // Continue for other months
                           default:
                             return '';
@@ -274,7 +318,7 @@ class ChartsWidget extends StatelessWidget {
                         ),
                       ],
                     ),
-                        BarChartGroupData(
+                    BarChartGroupData(
                       x: 3,
                       barRods: [
                         BarChartRodData(
@@ -284,22 +328,28 @@ class ChartsWidget extends StatelessWidget {
                         ),
                       ],
                     ),
-                        BarChartGroupData(
+                    BarChartGroupData(
                       x: 4,
                       barRods: [
                         BarChartRodData(
                           y: 25,
-                          colors: [Color.fromARGB(255, 153, 199, 53), Colors.deepOrange],
+                          colors: [
+                            Color.fromARGB(255, 153, 199, 53),
+                            Colors.deepOrange
+                          ],
                           width: 20,
                         ),
                       ],
                     ),
-                        BarChartGroupData(
+                    BarChartGroupData(
                       x: 5,
                       barRods: [
                         BarChartRodData(
                           y: 04,
-                          colors: [Color.fromARGB(255, 32, 120, 12), Colors.deepOrange],
+                          colors: [
+                            Color.fromARGB(255, 32, 120, 12),
+                            Colors.deepOrange
+                          ],
                           width: 20,
                         ),
                       ],
@@ -309,7 +359,10 @@ class ChartsWidget extends StatelessWidget {
                       barRods: [
                         BarChartRodData(
                           y: 10,
-                          colors: [Color.fromARGB(255, 6, 152, 132), Colors.deepOrange],
+                          colors: [
+                            Color.fromARGB(255, 6, 152, 132),
+                            Colors.deepOrange
+                          ],
                           width: 20,
                         ),
                       ],
@@ -319,7 +372,10 @@ class ChartsWidget extends StatelessWidget {
                       barRods: [
                         BarChartRodData(
                           y: 14,
-                          colors: [Color.fromARGB(255, 7, 62, 134), Colors.deepOrange],
+                          colors: [
+                            Color.fromARGB(255, 7, 62, 134),
+                            Colors.deepOrange
+                          ],
                           width: 20,
                         ),
                       ],
@@ -329,7 +385,10 @@ class ChartsWidget extends StatelessWidget {
                       barRods: [
                         BarChartRodData(
                           y: 44,
-                          colors: [Color.fromARGB(255, 129, 60, 218), Colors.deepOrange],
+                          colors: [
+                            Color.fromARGB(255, 129, 60, 218),
+                            Colors.deepOrange
+                          ],
                           width: 20,
                         ),
                       ],
@@ -339,7 +398,10 @@ class ChartsWidget extends StatelessWidget {
                       barRods: [
                         BarChartRodData(
                           y: 34,
-                          colors: [Color.fromARGB(255, 167, 24, 183), Colors.deepOrange],
+                          colors: [
+                            Color.fromARGB(255, 167, 24, 183),
+                            Colors.deepOrange
+                          ],
                           width: 20,
                         ),
                       ],
@@ -349,7 +411,10 @@ class ChartsWidget extends StatelessWidget {
                       barRods: [
                         BarChartRodData(
                           y: 4,
-                          colors: [Color.fromARGB(255, 68, 60, 126), Colors.deepOrange],
+                          colors: [
+                            Color.fromARGB(255, 68, 60, 126),
+                            Colors.deepOrange
+                          ],
                           width: 20,
                         ),
                       ],
@@ -359,12 +424,15 @@ class ChartsWidget extends StatelessWidget {
                       barRods: [
                         BarChartRodData(
                           y: 14,
-                          colors: [Color.fromARGB(255, 179, 24, 81), Colors.deepOrange],
+                          colors: [
+                            Color.fromARGB(255, 179, 24, 81),
+                            Colors.deepOrange
+                          ],
                           width: 20,
                         ),
                       ],
                     ),
-                   
+
                     // Add more BarChartGroupData for other months if needed
                   ],
                 ),
@@ -376,7 +444,4 @@ class ChartsWidget extends StatelessWidget {
       ),
     );
   }
-
-
-  
 }
